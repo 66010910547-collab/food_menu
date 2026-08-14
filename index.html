@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI เมนูชวนหิว & Smart Fresh Market</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f8fafc;
+        }
+        .animate-spin-slow {
+            animation: spin 3s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .toast-slide-in {
+            animation: slideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col relative">
+
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+    <header class="bg-amber-500 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white p-2 rounded-full text-amber-500 shadow-inner">
+                    <i class="fa-solid fa-utensils text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-xl tracking-wide leading-tight">AI เมนูชวนหิว</h1>
+                    <p class="text-xs text-amber-100 font-light">วางแผนอาหาร & ตลาดสดวัตถุดิบออนไลน์</p>
+                </div>
+            </div>
+
+            <!-- Tab Controls -->
+            <nav class="flex bg-amber-600/60 p-1 rounded-xl text-xs md:text-sm font-medium overflow-x-auto max-w-full">
+                <button onclick="switchTab('scan')" id="tab-scan" class="tab-btn whitespace-nowrap px-3 py-1.5 rounded-lg transition bg-white text-amber-600 shadow-sm">
+                    <i class="fa-solid fa-camera mr-1"></i> ถ่ายภาพ/เมนู
+                </button>
+                <button onclick="switchTab('planner')" id="tab-planner" class="tab-btn whitespace-nowrap px-3 py-1.5 rounded-lg transition text-white hover:text-amber-100">
+                    <i class="fa-solid fa-calendar-week mr-1"></i> ตารางสัปดาห์
+                </button>
+                <button onclick="switchTab('market')" id="tab-market" class="tab-btn whitespace-nowrap px-3 py-1.5 rounded-lg transition text-white hover:text-amber-100 relative">
+                    <i class="fa-solid fa-store mr-1"></i> ตลาดออนไลน์
+                    <span id="cartBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white font-bold rounded-full text-[10px] w-4 h-4 flex items-center justify-center">0</span>
+                </button>
+                <button onclick="switchTab('merchant')" id="tab-merchant" class="tab-btn whitespace-nowrap px-3 py-1.5 rounded-lg transition text-white hover:text-amber-100">
+                    <i class="fa-solid fa-plus-circle mr-1"></i> สำหรับร้านค้า
+                </button>
+                <button onclick="switchTab('github')" id="tab-github" class="tab-btn whitespace-nowrap px-3 py-1.5 rounded-lg transition text-amber-200 hover:text-white">
+                    <i class="fa-brands fa-github mr-1"></i> วิธีลง GitHub
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+        <!-- ================= TAB 1: SCAN & AI RECIPES ================= -->
+        <section id="sec-scan" class="space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-8 text-center">
+                <h2 class="text-lg md:text-xl font-bold text-slate-700 mb-1">ถ่ายภาพหรือเลือกวัตถุดิบจากเครื่อง</h2>
+                <p class="text-sm text-slate-500 mb-5">ถ่ายภาพเนื้อสัตว์ ผัก เครื่องปรุงที่มี เพื่อให้ AI ช่วยคิดเมนูและวางแผนการปรุง</p>
+
+                <div class="flex flex-wrap justify-center gap-3 mb-6">
+                    <button onclick="document.getElementById('cameraInput').click()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-camera text-lg"></i> ถ่ายภาพด้วยกล้อง
+                    </button>
+                    <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden">
+
+                    <button onclick="document.getElementById('galleryInput').click()" class="bg-sky-600 hover:bg-sky-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-image text-lg"></i> เลือกจากคลังภาพ
+                    </button>
+                    <input type="file" id="galleryInput" accept="image/*" multiple class="hidden">
+                </div>
+
+                <!-- Gallery Preview Grid -->
+                <div id="previewArea" class="border-2 border-dashed border-slate-200 rounded-xl p-4 min-h-[140px] flex flex-col justify-center items-center bg-slate-50">
+                    <div id="emptyPlaceholder" class="text-slate-400 text-center py-4">
+                        <i class="fa-solid fa-images text-3xl mb-2 text-slate-300"></i>
+                        <p class="text-sm">ยังไม่มีรูปภาพวัตถุดิบ</p>
+                    </div>
+                    <div id="imageGrid" class="hidden grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 w-full"></div>
+                </div>
+
+                <!-- Analysis Controls -->
+                <div class="mt-6 flex flex-wrap justify-center gap-3">
+                    <button id="analyzeBtn" disabled class="bg-amber-500 hover:bg-amber-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> คิดเมนูจากภาพ
+                    </button>
+                    <button id="planWeeklyBtn" disabled class="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-calendar-week"></i> จัดตารางอาหาร 7 วัน
+                    </button>
+                </div>
+            </div>
+
+            <div id="loadingSection" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center">
+                <div class="inline-block p-4 rounded-full bg-amber-50 text-amber-500 mb-3 animate-spin-slow">
+                    <i class="fa-solid fa-compact-disc text-4xl"></i>
+                </div>
+                <h3 id="loadingTitle" class="text-lg font-semibold text-slate-700">กำลังวิเคราะห์ข้อมูล...</h3>
+                <p id="loadingSubtitle" class="text-sm text-slate-500 mt-1">AI กำลังประมวลผล โปรดรอสักครู่</p>
+            </div>
+
+            <div id="resultSection" class="hidden space-y-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+                    <h3 class="text-md font-bold text-slate-700 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-carrot text-orange-500"></i> วัตถุดิบที่ตรวจพบ:
+                    </h3>
+                    <div id="ingredientsList" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-book-open text-amber-500"></i> เมนูแนะนำจาก AI
+                    </h3>
+                    <div id="recipesGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 2: WEEKLY MEAL PLANNER ================= -->
+        <section id="sec-planner" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-6">
+                <div class="flex flex-wrap justify-between items-center gap-4 mb-6 border-b border-slate-100 pb-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800">ตารางอาหารประจำสัปดาห์ (7 วัน)</h2>
+                        <p class="text-sm text-slate-500">วางแผนโภชนาการล่วงหน้าเพื่อสุขภาพและการจัดเตรียมวัตถุดิบ</p>
+                    </div>
+                    <button onclick="triggerWeeklyAIPlan()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm px-4 py-2 rounded-xl transition flex items-center gap-2">
+                        <i class="fa-solid fa-rotate"></i> สร้างตารางใหม่ด้วย AI
+                    </button>
+                </div>
+
+                <div id="plannerEmptyState" class="text-center py-12 text-slate-400">
+                    <i class="fa-solid fa-calendar-plus text-5xl mb-3 text-slate-300"></i>
+                    <p class="text-base font-medium">ยังไม่มีตารางอาหาร</p>
+                    <p class="text-xs text-slate-400 mt-1">อัปโหลดรูปภาพวัตถุดิบที่หน้าแรก แล้วกด "จัดตารางอาหาร 7 วัน"</p>
+                </div>
+
+                <div id="plannerContent" class="hidden space-y-4">
+                    <div id="weeklyGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 3: ONLINE MARKETPLACE ================= -->
+        <section id="sec-market" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-wrap justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">ตลาดสดและเครื่องปรุงออนไลน์</h2>
+                    <p class="text-sm text-slate-500">สั่งซื้อวัตถุดิบสดใหม่ส่งตรงถึงบ้านคุณ</p>
+                </div>
+
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
+                    <button onclick="filterCategory('all', event)" class="cat-filter-btn active bg-amber-500 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap">ทั้งหมด</button>
+                    <button onclick="filterCategory('ผักสด', event)" class="cat-filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs px-3 py-1.5 rounded-lg whitespace-nowrap">ผักสด</button>
+                    <button onclick="filterCategory('เนื้อสัตว์', event)" class="cat-filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs px-3 py-1.5 rounded-lg whitespace-nowrap">เนื้อสัตว์</button>
+                    <button onclick="filterCategory('เครื่องปรุง', event)" class="cat-filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs px-3 py-1.5 rounded-lg whitespace-nowrap">เครื่องปรุง</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Product Grid -->
+                <div id="marketProductsGrid" class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 h-fit sticky top-20">
+                    <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center justify-between">
+                        <span><i class="fa-solid fa-cart-shopping text-amber-500 mr-2"></i>ตะกร้าสินค้า</span>
+                        <span id="cartItemCount" class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">0 รายการ</span>
+                    </h3>
+
+                    <div id="cartItemsList" class="divide-y divide-slate-100 max-h-60 overflow-y-auto mb-4 text-sm">
+                        <p class="text-slate-400 text-center py-6 text-xs">ยังไม่มีสินค้าในตะกร้า</p>
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-3 space-y-2 text-sm">
+                        <div class="flex justify-between text-slate-500">
+                            <span>ราคาสินค้ารวม:</span>
+                            <span id="cartSubtotal">฿0</span>
+                        </div>
+                        <div class="flex justify-between text-slate-500">
+                            <span>ค่าจัดส่ง:</span>
+                            <span id="cartShipping">฿30</span>
+                        </div>
+                        <div class="flex justify-between font-bold text-slate-800 text-base border-t border-slate-200 pt-2">
+                            <span>ยอดชำระสุทธิ:</span>
+                            <span id="cartTotal" class="text-emerald-600">฿0</span>
+                        </div>
+                    </div>
+
+                    <button id="checkoutBtn" onclick="checkout()" disabled class="w-full mt-5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-medium py-2.5 rounded-xl shadow transition text-sm flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-credit-card"></i> สั่งซื้อสินค้า
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 4: MERCHANT PORTAL ================= -->
+        <section id="sec-merchant" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 max-w-2xl mx-auto">
+                <div class="text-center mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800"><i class="fa-solid fa-store text-amber-500 mr-2"></i>สำหรับร้านค้า: ฝากขายวัตถุดิบ</h2>
+                    <p class="text-sm text-slate-500">นำเข้าสินค้า ผักสด เนื้อสัตว์ เครื่องปรุง เพื่อวางขายบนตลาดออนไลน์</p>
+                </div>
+
+                <form id="addProductForm" onsubmit="handleAddProduct(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">ชื่อสินค้า / วัตถุดิบ *</label>
+                        <input type="text" id="pName" required placeholder="เช่น อกไก่สด 500g, ซอสผัดกะเพรา" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">หมวดหมู่ *</label>
+                            <select id="pCategory" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                                <option value="ผักสด">ผักสด</option>
+                                <option value="เนื้อสัตว์">เนื้อสัตว์</option>
+                                <option value="เครื่องปรุง">เครื่องปรุง</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">ราคา (บาท) *</label>
+                            <input type="number" id="pPrice" required min="1" placeholder="45" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">รูปภาพสินค้า (URL หรือถ่ายภาพ)</label>
+                        <input type="text" id="pImageUrl" placeholder="https://..." class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">รายละเอียดสินค้า</label>
+                        <textarea id="pDesc" rows="2" placeholder="บอกจุดเด่น สด ใหม่ ปลอดสารพิษ..." class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2.5 rounded-xl shadow transition text-sm">
+                        <i class="fa-solid fa-plus-circle mr-1"></i> ลงทะเบียนเพิ่มสินค้าเข้าตลาด
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ================= TAB 5: GITHUB DEPLOYMENT GUIDE ================= -->
+        <section id="sec-github" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 max-w-3xl mx-auto space-y-6">
+                <div class="border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-brands fa-github text-slate-800 text-2xl"></i> วิธีนำเว็บนี้ไปรันฟรีบน GitHub Pages
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1">ทำตาม 4 ขั้นตอนนี้เพื่อเผยแพร่เว็บไซต์ของคุณให้คนอื่นเข้าใช้งานได้ทั่วโลก</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex gap-4 items-start bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <span class="bg-amber-500 text-white font-bold rounded-full w-7 h-7 flex items-center justify-center shrink-0">1</span>
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-sm">สร้าง Repository บน GitHub</h3>
+                            <p class="text-xs text-slate-600 mt-1">ล็อกอินเข้า GitHub.com แล้วกดปุ่ม <strong>New Repository</strong> ตั้งชื่อ เช่น <code class="bg-amber-100 text-amber-800 px-1 py-0.5 rounded">my-ai-kitchen</code> แล้วเลือกสถานะเป็น <strong>Public</strong></p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 items-start bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <span class="bg-amber-500 text-white font-bold rounded-full w-7 h-7 flex items-center justify-center shrink-0">2</span>
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-sm">อัปโหลดไฟล์ index.html</h3>
+                            <p class="text-xs text-slate-600 mt-1">คัดลอกโค้ดทั้งหมดในหน้านี้ บันทึกลงในคอมพิวเตอร์ของคุณในชื่อไฟล์ว่า <code class="bg-amber-100 text-amber-800 px-1 py-0.5 rounded">index.html</code> จากนั้นกด <strong>uploading an existing file</strong> บน GitHub เพื่ออัปโหลดไฟล์</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 items-start bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <span class="bg-amber-500 text-white font-bold rounded-full w-7 h-7 flex items-center justify-center shrink-0">3</span>
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-sm">เปิดใช้งาน GitHub Pages</h3>
+                            <p class="text-xs text-slate-600 mt-1">ไปที่เมนู <strong>Settings</strong> ➔ เลือกหัวข้อ <strong>Pages</strong> ด้านซ้ายมือ ➔ ในส่วน <strong>Branch</strong> ให้เลือกเป็น <code class="bg-amber-100 text-amber-800 px-1 py-0.5 rounded">main</code> (หรือ master) แล้วกด <strong>Save</strong></p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 items-start bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                        <span class="bg-emerald-600 text-white font-bold rounded-full w-7 h-7 flex items-center justify-center shrink-0"><i class="fa-solid fa-check text-xs"></i></span>
+                        <div>
+                            <h3 class="font-bold text-emerald-800 text-sm">เสร็จสิ้น! ได้รับลิงก์เว็บไซต์</h3>
+                            <p class="text-xs text-emerald-700 mt-1">รอประมาณ 1-2 นาที คุณจะได้ลิงก์เว็บไซต์ เช่น <code class="bg-emerald-100 text-emerald-900 px-1 py-0.5 rounded">https://yourname.github.io/my-ai-kitchen/</code> สำหรับเปิดใช้งานทันที!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div id="recipeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex justify-center items-center z-50 p-4">
+            <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col">
+                <div class="p-5 border-b border-slate-100 flex justify-between items-start sticky top-0 bg-white z-10">
+                    <div>
+                        <span id="modalCategory" class="text-xs font-semibold uppercase text-amber-600 bg-amber-50 px-2.5 py-1 rounded-md">ประเภทอาหาร</span>
+                        <h2 id="modalTitle" class="text-xl font-bold text-slate-800 mt-1">ชื่อเมนู</h2>
+                    </div>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+
+                <div class="p-5 space-y-5 text-sm text-slate-600">
+                    <div class="flex justify-around bg-slate-50 p-3 rounded-xl text-center text-xs">
+                        <div>
+                            <span class="block text-slate-400">เวลาเตรียม</span>
+                            <span id="modalPrepTime" class="font-semibold text-slate-700">15 นาที</span>
+                        </div>
+                        <div class="border-r border-slate-200"></div>
+                        <div>
+                            <span class="block text-slate-400">ระดับความยาก</span>
+                            <span id="modalDifficulty" class="font-semibold text-slate-700">ง่าย</span>
+                        </div>
+                    </div>
+
+                    <p id="modalDescription"></p>
+
+                    <div>
+                        <h4 class="font-bold text-slate-700 mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-basket-shopping text-amber-500"></i> วัตถุดิบและส่วนผสม
+                        </h4>
+                        <ul id="modalIngredients" class="list-disc list-inside space-y-1 bg-amber-50/50 p-3 rounded-xl border border-amber-100"></ul>
+                    </div>
+
+                    <div>
+                        <h4 class="font-bold text-slate-700 mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-amber-500"></i> ขั้นตอนการทำ
+                        </h4>
+                        <ol id="modalSteps" class="space-y-3"></ol>
+                    </div>
+                </div>
+
+                <div class="p-4 border-t border-slate-100 bg-slate-50 text-right rounded-b-2xl">
+                    <button onclick="closeModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-xl text-xs font-medium">ปิดหน้าต่าง</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const apiKey = ""; // API key can be inserted here if available
+
+        // Application Global State
+        let imageList = [];
+        let currentRecipes = [];
+        let cart = [];
+        
+        // Initial Products Catalog
+        let products = [
+            { id: 'p1', name: 'ผักกาดขาวเกษตรอินทรีย์ 500g', category: 'ผักสด', price: 35, image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=300', desc: 'ผักสดปลอดสารพิษ ส่งตรงจากฟาร์ม' },
+            { id: 'p2', name: 'อกไก่สดอนามัย 1000g', category: 'เนื้อสัตว์', price: 89, image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=300', desc: 'อกไก่สดไม่ติดหนัง สำหรับเมนูสุขภาพ' },
+            { id: 'p3', name: 'ซอสผัดกะเพราสูตรเข้มข้น', category: 'เครื่องปรุง', price: 45, image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=300', desc: 'รสชาติกลมกล่อม ไม่ต้องปรุงเพิ่ม' },
+            { id: 'p4', name: 'ไข่ไก่สดออร์แกนิก Pack 10 ฟอง', category: 'เนื้อสัตว์', price: 65, image: 'https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=300', desc: 'ไข่ไก่สดใหม่ สะอาด ปลอดภัย' }
+        ];
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const bgColor = type === 'error' ? 'bg-rose-600' : (type === 'warning' ? 'bg-amber-600' : 'bg-emerald-600');
+            const icon = type === 'error' ? 'fa-circle-xmark' : (type === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-check');
+            
+            toast.className = `${bgColor} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 toast-slide-in pointer-events-auto text-sm font-medium`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-lg"></i><span class="flex-grow">${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-10px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function switchTab(tabName) {
+            ['scan', 'planner', 'market', 'merchant', 'github'].forEach(t => {
+                const sec = document.getElementById(`sec-${t}`);
+                if (sec) sec.classList.add('hidden');
+                const btn = document.getElementById(`tab-${t}`);
+                if (btn) {
+                    btn.classList.remove('bg-white', 'text-amber-600', 'shadow-sm');
+                    btn.classList.add('text-white');
+                }
+            });
+
+            const activeSec = document.getElementById(`sec-${tabName}`);
+            if (activeSec) activeSec.classList.remove('hidden');
+            
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-white', 'text-amber-600', 'shadow-sm');
+                activeBtn.classList.remove('text-white');
+            }
+        }
+
+        const cameraInput = document.getElementById('cameraInput');
+        const galleryInput = document.getElementById('galleryInput');
+
+        if (cameraInput) {
+            cameraInput.addEventListener('change', (e) => {
+                if (e.target.files?.[0]) processFiles([e.target.files[0]]);
+                e.target.value = '';
+            });
+        }
+
+        if (galleryInput) {
+            galleryInput.addEventListener('change', (e) => {
+                if (e.target.files?.length > 0) processFiles(Array.from(e.target.files));
+                e.target.value = '';
+            });
+        }
+
+        function processFiles(files) {
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const dataUrl = event.target.result;
+                    const base64 = dataUrl.split(',')[1];
+                    const id = Date.now() + Math.random().toString(36).substring(2, 9);
+                    imageList.push({ id, base64, dataUrl });
+                    renderImageGrid();
+                };
+                reader.readAsDataURL(file);
+            });
+            showToast(`เพิ่มรูปภาพสำเร็จแล้ว ${files.length} รายการ`, 'success');
+        }
+
+        function renderImageGrid() {
+            const emptyPlaceholder = document.getElementById('emptyPlaceholder');
+            const imageGrid = document.getElementById('imageGrid');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const planWeeklyBtn = document.getElementById('planWeeklyBtn');
+
+            if (imageList.length === 0) {
+                emptyPlaceholder.classList.remove('hidden');
+                imageGrid.classList.add('hidden');
+                analyzeBtn.disabled = true;
+                planWeeklyBtn.disabled = true;
+                return;
+            }
+
+            emptyPlaceholder.classList.add('hidden');
+            imageGrid.classList.remove('hidden');
+            analyzeBtn.disabled = false;
+            planWeeklyBtn.disabled = false;
+
+            imageGrid.innerHTML = '';
+            imageList.forEach((imgObj) => {
+                const card = document.createElement('div');
+                card.className = "relative group aspect-square rounded-lg overflow-hidden bg-slate-200 border border-slate-300 shadow-sm";
+                card.innerHTML = `
+                    <img src="${imgObj.dataUrl}" class="w-full h-full object-cover" alt="วัตถุดิบ" />
+                    <button onclick="removeImage('${imgObj.id}')" class="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `;
+                imageGrid.appendChild(card);
+            });
+        }
+
+        function removeImage(id) {
+            imageList = imageList.filter(img => img.id !== id);
+            renderImageGrid();
+            showToast('ลบรูปภาพแล้ว', 'warning');
+        }
+
+        document.getElementById('analyzeBtn').addEventListener('click', async () => {
+            if (imageList.length === 0) return;
+
+            showLoading("กำลังคิดเมนูอาหาร...", "AI กำลังอ่านส่วนผสมในภาพถ่าย");
+            try {
+                let res;
+                if (apiKey) {
+                    const prompt = `วิเคราะห์ภาพวัตถุดิบและเสนอเมนูอาหารไทย 3-4 เมนู ตอบเป็น JSON ตามโครงสร้าง:
+                    {
+                        "detectedIngredients": ["ผักสด", "ไก่"],
+                        "recipes": [
+                            {
+                                "id": "1",
+                                "title": "ผัดกะเพราอกไก่",
+                                "category": "ผัด",
+                                "prepTime": "15 นาที",
+                                "difficulty": "ง่าย",
+                                "description": "หอมกลิ่นกะเพรา รสชาติเข้มข้น",
+                                "ingredients": ["อกไก่ 200g", "ใบกะเพรา", "พริกจินดา"],
+                                "steps": ["สับอกไก่ให้พอดีคำ", "ผัดพริกกระเทียมให้หอม", "ใส่ไก่และปรุงรส"]
+                            }
+                        ]
+                    }`;
+                    res = await callGeminiAPI(prompt, imageList);
+                } else {
+                    // Demo fallback when API key is not provided on static host
+                    await new Promise(r => setTimeout(r, 1500));
+                    res = getSimulatedRecipes();
+                }
+                displayAnalysisResults(res);
+                showToast('AI สร้างเมนูแนะนำเรียบร้อยแล้ว!', 'success');
+            } catch (err) {
+                showToast("เกิดข้อผิดพลาด: " + err.message, "error");
+            } finally {
+                hideLoading();
+            }
+        });
+
+        document.getElementById('planWeeklyBtn').addEventListener('click', async () => {
+            triggerWeeklyAIPlan();
+        });
+
+        async function triggerWeeklyAIPlan() {
+            showLoading("กำลังจัดตารางอาหารประจำสัปดาห์...", "AI กำลังคำนวณโภชนาการสำหรับ 7 วัน");
+            try {
+                let planData;
+                if (apiKey && imageList.length > 0) {
+                    const prompt = `วิเคราะห์ภาพวัตถุดิบอาหาร และจัดตารางอาหารประจำสัปดาห์ 7 วัน ตอบเป็น JSON:
+                    {
+                        "weeklyPlan": [
+                            {
+                                "day": "วันจันทร์",
+                                "breakfast": "ต้มเลือดหมูใบตำลึง",
+                                "lunch": "ข้าวมันไก่ต้ม",
+                                "dinner": "แกงจืดเต้าหู้หมูสับ",
+                                "missingIngredients": ["ตำลึง", "เต้าหู้ไข่"]
+                            }
+                        ]
+                    }`;
+                    const res = await callGeminiAPI(prompt, imageList);
+                    planData = res.weeklyPlan;
+                } else {
+                    await new Promise(r => setTimeout(r, 1500));
+                    planData = getSimulatedWeeklyPlan();
+                }
+                displayWeeklyPlanResults(planData);
+                switchTab('planner');
+                showToast('จัดตารางอาหาร 7 วัน เรียบร้อยแล้ว!', 'success');
+            } catch (err) {
+                showToast("ไม่สามารถสร้างตารางได้: " + err.message, "error");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function callGeminiAPI(promptText, images) {
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            const parts = [{ text: promptText }];
+            images.forEach(img => {
+                parts.push({ inlineData: { mimeType: "image/jpeg", data: img.base64 } });
+            });
+
+            const payload = {
+                contents: [{ role: "user", parts: parts }],
+                generationConfig: { responseMimeType: "application/json" }
+            };
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const result = await response.json();
+            const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            return JSON.parse(text);
+        }
+
+        function getSimulatedRecipes() {
+            return {
+                detectedIngredients: ["อกไก่สด", "ผักกาดขาว", "ไข่ไก่", "พริกขี้หนู"],
+                recipes: [
+                    {
+                        id: "1",
+                        title: "ผัดกะเพราอกไก่ไข่ดาว",
+                        category: "ผัด",
+                        prepTime: "15 นาที",
+                        difficulty: "ง่าย",
+                        description: "เมนูยอดฮิตรสชาติเผ็ดร้อน หอมกลิ่นใบกะเพรา ทอดพร้อมไข่ดาวกรอบๆ",
+                        ingredients: ["อกไก่ 250g", "ใบกะเพรา 1 กำ", "พริกขี้หนูและกระเทียมสับ 2 ช้อนโต๊ะ", "ไข่ไก่ 1 ฟอง", "ซอสผัดกะเพรา"],
+                        steps: [
+                            "ตั้งกระทะใส่หอมกระเทียมพริกผัดให้มีกลิ่นหอม",
+                            "ใส่อกไก่หั่นชิ้นลงไปผัดจนสุก",
+                            "เติมซอสผัดกะเพราและเร่งไฟแรง ใส่ใบกะเพราแล้วปิดไฟทันที",
+                            "ทอดไข่ดาวขอบกรอบ เสิร์ฟพร้อมข้าวสวยร้อนๆ"
+                        ]
+                    },
+                    {
+                        id: "2",
+                        title: "ต้มจืดผักกาดขาวหมูสับยัดไส้",
+                        category: "ต้ม",
+                        prepTime: "20 นาที",
+                        difficulty: "ปานกลาง",
+                        description: "ซุปร้อนๆ รสชาติกลมกล่อม เหมาะสำหรับมื้อเย็นที่ต้องการอาหารย่อยง่าย",
+                        ingredients: ["ผักกาดขาว 1 หัว", "อกไก่/หมูสับ 200g", "วุ้นเส้น 50g", "ซีอิ๊วขาว 1 ช้อนโต๊ะ"],
+                        steps: [
+                            "หมักเนื้อสัตว์กับวุ้นเส้นและปรุงรสด้วยซีอิ๊วขาว",
+                            "นำผักกาดขาวไปลวกให้นุ่ม แล้วห่อด้วยเนื้อสัตว์หมัก",
+                            "ตั้งน้ำซุปให้เดือด นำผักห่อลงไปต้มจนสุกตักใส่ชาม"
+                        ]
+                    }
+                ]
+            };
+        }
+
+        function getSimulatedWeeklyPlan() {
+            return [
+                { day: "วันจันทร์", breakfast: "ไข่กระทะทรงเครื่อง", lunch: "ข้าวมันไก่ต้ม", dinner: "ต้มจืดผักกาดขาวอกไก่", missingIngredients: ["กุนเชียง", "ต้นหอม"] },
+                { day: "วันอังคาร", breakfast: "ข้าวต้มอกไก่ใส่ไข่", lunch: "ผัดกะเพราไก่ราดข้าว", dinner: "สลัดอกไก่น้ำใส", missingIngredients: ["น้ำสลัด", "ผักสลัด"] },
+                { day: "วันพุธ", breakfast: "แซนด์วิชอกไก่และไข่ดาว", lunch: "ผัดซีอิ๊วใส่ผักกาดขาว", dinner: "แกงจืดเต้าหู้หมูสับ", missingIngredients: ["เส้นใหญ่", "เต้าหู้ไข่"] },
+                { day: "วันพฤหัสบดี", breakfast: "ไข่เจียวสมุนไพรสด", lunch: "ข้าวหน้าไก่เทริยากิ", dinner: "ต้มยำไก่น้ำใส", missingIngredients: ["ข่า ตะไคร้ ใบมะกรูด"] },
+                { day: "วันศุกร์", breakfast: "โจ๊กไก่สับใส่ไข่ออนเซ็น", lunch: "ผัดพริกเผาอกไก่", dinner: "สุกี้น้ำรวมมิตรผักสด", missingIngredients: ["น้ำจิ้มสุกี้"] },
+                { day: "วันเสาร์", breakfast: "ปังปิ้งไข่ดาวสไตล์โฮมเมด", lunch: "ข้าวผัดไข่ใส่ไก่", dinner: "แกงเลียงผักรวม", missingIngredients: ["กุ้งแห้ง", "กะปิ"] },
+                { day: "วันอาทิตย์", breakfast: "ไข่ตุ๋นเนื้อนุ่มสไตล์ญี่ปุ่น", lunch: "ผัดกะเพราไข่เยี่ยมม้า", dinner: "ซุปไก่มันฝรั่ง", missingIngredients: ["มันฝรั่ง", "หอมใหญ่"] }
+            ];
+        }
+
+        function showLoading(title, subtitle) {
+            document.getElementById('loadingTitle').textContent = title;
+            document.getElementById('loadingSubtitle').textContent = subtitle;
+            document.getElementById('loadingSection').classList.remove('hidden');
+            document.getElementById('resultSection').classList.add('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingSection').classList.add('hidden');
+        }
+
+        function displayAnalysisResults(data) {
+            const ingredientsList = document.getElementById('ingredientsList');
+            const recipesGrid = document.getElementById('recipesGrid');
+
+            ingredientsList.innerHTML = '';
+            recipesGrid.innerHTML = '';
+
+            (data.detectedIngredients || []).forEach(item => {
+                const badge = document.createElement('span');
+                badge.className = "bg-orange-50 text-orange-600 border border-orange-200 text-xs px-3 py-1 rounded-full font-medium";
+                badge.innerHTML = `<i class="fa-solid fa-check text-xs mr-1"></i>${item}`;
+                ingredientsList.appendChild(badge);
+            });
+
+            currentRecipes = data.recipes || [];
+            currentRecipes.forEach((recipe, idx) => {
+                const card = document.createElement('div');
+                card.className = "bg-white border border-slate-200 rounded-xl p-4 hover:shadow-md transition flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">${recipe.category}</span>
+                            <span class="text-xs text-slate-400"><i class="fa-regular fa-clock"></i> ${recipe.prepTime}</span>
+                        </div>
+                        <h4 class="font-bold text-slate-800 text-base mb-1">${recipe.title}</h4>
+                        <p class="text-slate-500 text-xs line-clamp-2 mb-4">${recipe.description}</p>
+                    </div>
+                    <button onclick="openRecipeModal(${idx})" class="w-full bg-amber-50 hover:bg-amber-100 text-amber-700 font-medium text-xs py-2 rounded-lg transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-utensils"></i> ดูสูตรและวิธีทำ
+                    </button>
+                `;
+                recipesGrid.appendChild(card);
+            });
+
+            document.getElementById('resultSection').classList.remove('hidden');
+        }
+
+        function displayWeeklyPlanResults(weeklyPlan) {
+            const plannerEmptyState = document.getElementById('plannerEmptyState');
+            const plannerContent = document.getElementById('plannerContent');
+            const weeklyGrid = document.getElementById('weeklyGrid');
+
+            plannerEmptyState.classList.add('hidden');
+            plannerContent.classList.remove('hidden');
+            weeklyGrid.innerHTML = '';
+
+            weeklyPlan.forEach(dayPlan => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3";
+                card.innerHTML = `
+                    <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+                        <h4 class="font-bold text-indigo-700 text-sm">${dayPlan.day}</h4>
+                        <span class="text-[10px] bg-indigo-100 text-indigo-700 font-semibold px-2 py-0.5 rounded-full">โภชนาการสมดุล</span>
+                    </div>
+                    <div class="text-xs space-y-1.5 text-slate-600">
+                        <p><strong>มื้อเช้า:</strong> ${dayPlan.breakfast}</p>
+                        <p><strong>มื้อกลางวัน:</strong> ${dayPlan.lunch}</p>
+                        <p><strong>มื้อเย็น:</strong> ${dayPlan.dinner}</p>
+                    </div>
+                    ${dayPlan.missingIngredients?.length ? `
+                        <div class="bg-amber-50 border border-amber-200 p-2 rounded-lg text-[11px] text-amber-900">
+                            <p class="font-semibold mb-1"><i class="fa-solid fa-basket-shopping text-amber-600"></i> แนะนำซื้อเพิ่ม:</p>
+                            <p class="text-slate-600 mb-1">${dayPlan.missingIngredients.join(', ')}</p>
+                            <button onclick="switchTab('market')" class="text-xs font-bold text-amber-600 hover:underline inline-block">
+                                สั่งซื้อในตลาดสดเลย →
+                            </button>
+                        </div>
+                    ` : ''}
+                `;
+                weeklyGrid.appendChild(card);
+            });
+        }
+
+        function renderMarketProducts(categoryFilter = 'all') {
+            const grid = document.getElementById('marketProductsGrid');
+            grid.innerHTML = '';
+
+            const filtered = categoryFilter === 'all' 
+                ? products 
+                : products.filter(p => p.category === categoryFilter);
+
+            filtered.forEach(p => {
+                const card = document.createElement('div');
+                card.className = "bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <img src="${p.image}" class="w-full h-32 object-cover" alt="${p.name}" />
+                        <div class="p-3">
+                            <span class="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">${p.category}</span>
+                            <h4 class="font-bold text-slate-800 text-sm mt-1">${p.name}</h4>
+                            <p class="text-slate-400 text-xs mt-1 line-clamp-1">${p.desc}</p>
+                        </div>
+                    </div>
+                    <div class="p-3 pt-0 flex justify-between items-center border-t border-slate-50 mt-2">
+                        <span class="font-bold text-emerald-600 text-sm">฿${p.price}</span>
+                        <button onclick="addToCart('${p.id}')" class="bg-amber-500 hover:bg-amber-600 text-white text-xs px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                            <i class="fa-solid fa-cart-plus"></i> เพิ่มลงตะกร้า
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterCategory(cat, e) {
+            document.querySelectorAll('.cat-filter-btn').forEach(b => {
+                b.classList.remove('bg-amber-500', 'text-white');
+                b.classList.add('bg-slate-100', 'text-slate-600');
+            });
+            if (e && e.target) {
+                e.target.classList.add('bg-amber-500', 'text-white');
+            }
+            renderMarketProducts(cat);
+        }
+
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            const existing = cart.find(item => item.id === productId);
+            if (existing) {
+                existing.qty++;
+            } else {
+                cart.push({ ...product, qty: 1 });
+            }
+            updateCartUI();
+            showToast(`เพิ่ม "${product.name}" ลงในตะกร้าแล้ว`, 'success');
+        }
+
+        function updateCartUI() {
+            const cartItemsList = document.getElementById('cartItemsList');
+            const cartBadge = document.getElementById('cartBadge');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+
+            const totalItems = cart.reduce((acc, item) => acc + item.qty, 0);
+            if (totalItems > 0) {
+                cartBadge.textContent = totalItems;
+                cartBadge.classList.remove('hidden');
+                checkoutBtn.disabled = false;
+            } else {
+                cartBadge.classList.add('hidden');
+                checkoutBtn.disabled = true;
+            }
+
+            document.getElementById('cartItemCount').textContent = `${totalItems} รายการ`;
+
+            if (cart.length === 0) {
+                cartItemsList.innerHTML = `<p class="text-slate-400 text-center py-6 text-xs">ยังไม่มีสินค้าในตะกร้า</p>`;
+                document.getElementById('cartSubtotal').textContent = '฿0';
+                document.getElementById('cartTotal').textContent = '฿0';
+                return;
+            }
+
+            cartItemsList.innerHTML = '';
+            let subtotal = 0;
+
+            cart.forEach(item => {
+                subtotal += item.price * item.qty;
+                const row = document.createElement('div');
+                row.className = "py-2 flex justify-between items-center";
+                row.innerHTML = `
+                    <div>
+                        <p class="font-medium text-slate-700 text-xs">${item.name}</p>
+                        <p class="text-[10px] text-slate-400">฿${item.price} x ${item.qty}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="changeQty('${item.id}', -1)" class="w-5 h-5 bg-slate-100 hover:bg-slate-200 rounded text-xs flex items-center justify-center text-slate-600">-</button>
+                        <span class="text-xs font-semibold">${item.qty}</span>
+                        <button onclick="changeQty('${item.id}', 1)" class="w-5 h-5 bg-slate-100 hover:bg-slate-200 rounded text-xs flex items-center justify-center text-slate-600">+</button>
+                    </div>
+                `;
+                cartItemsList.appendChild(row);
+            });
+
+            document.getElementById('cartSubtotal').textContent = `฿${subtotal}`;
+            document.getElementById('cartTotal').textContent = `฿${subtotal + 30}`;
+        }
+
+        function changeQty(productId, delta) {
+            const item = cart.find(i => i.id === productId);
+            if (!item) return;
+            item.qty += delta;
+            if (item.qty <= 0) {
+                cart = cart.filter(i => i.id !== productId);
+            }
+            updateCartUI();
+        }
+
+        function checkout() {
+            showToast('ส่งคำสั่งซื้อเรียบร้อยแล้ว! ร้านค้าจะจัดส่งวัตถุดิบถึงบ้านคุณภายใน 1 ชั่วโมง', 'success');
+            cart = [];
+            updateCartUI();
+        }
+
+        function handleAddProduct(e) {
+            e.preventDefault();
+            const name = document.getElementById('pName').value;
+            const category = document.getElementById('pCategory').value;
+            const price = parseFloat(document.getElementById('pPrice').value);
+            const image = document.getElementById('pImageUrl').value || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300';
+            const desc = document.getElementById('pDesc').value || 'สินค้าคุณภาพสดใหม่จากร้านค้า';
+
+            const newProduct = {
+                id: 'p_' + Date.now(),
+                name,
+                category,
+                price,
+                image,
+                desc
+            };
+
+            products.unshift(newProduct);
+            renderMarketProducts();
+            document.getElementById('addProductForm').reset();
+            showToast('เพิ่มสินค้าเข้าสู่ตลาดสดออนไลน์เรียบร้อยแล้ว!', 'success');
+            switchTab('market');
+        }
+
+        function openRecipeModal(index) {
+            const recipe = currentRecipes[index];
+            if (!recipe) return;
+
+            document.getElementById('modalTitle').textContent = recipe.title;
+            document.getElementById('modalCategory').textContent = recipe.category;
+            document.getElementById('modalPrepTime').textContent = recipe.prepTime;
+            document.getElementById('modalDifficulty').textContent = recipe.difficulty;
+            document.getElementById('modalDescription').textContent = recipe.description;
+
+            const ingredientsUl = document.getElementById('modalIngredients');
+            ingredientsUl.innerHTML = '';
+            (recipe.ingredients || []).forEach(ing => {
+                const li = document.createElement('li');
+                li.textContent = ing;
+                ingredientsUl.appendChild(li);
+            });
+
+            const stepsOl = document.getElementById('modalSteps');
+            stepsOl.innerHTML = '';
+            (recipe.steps || []).forEach((step, idx) => {
+                const li = document.createElement('li');
+                li.className = "flex gap-3 items-start";
+                li.innerHTML = `
+                    <span class="bg-amber-500 text-white font-bold rounded-full w-5 h-5 flex items-center justify-center text-xs shrink-0 mt-0.5">${idx + 1}</span>
+                    <span>${step}</span>
+                `;
+                stepsOl.appendChild(li);
+            });
+
+            document.getElementById('recipeModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('recipeModal').classList.add('hidden');
+        }
+
+        // Initialize Market Catalog on Load
+        renderMarketProducts();
+    </script>
+</body>
+</html>
