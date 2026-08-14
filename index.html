@@ -767,9 +767,16 @@
             try {
                 let res;
                 if (apiKey) {
-                    const prompt = `วิเคราะห์วัตถุดิบจากภาพ และแนะนำสูตรอาหารสำหรับสถานที่ "${currentCookingLocation}" (home/condo/camping) ตอบเป็น JSON:
+                    const prompt = `วิเคราะห์ภาพที่ส่งมาว่ามีวัตถุดิบสำหรับทำอาหารหรือเป็นภาพอาหารหรือไม่
+                    หาก "ไม่มี" วัตถุดิบหรืออาหารที่นำไปทำอาหารต่อได้ ให้ตอบ JSON ในรูปแบบนี้:
                     {
-                        "detectedIngredients": ["ผักสด", "ไก่"],
+                        "isFood": false,
+                        "message": "ไม่พบวัตถุดิบที่จะนำมาทำอาหารได้ แนะนำให้ใส่รูปภาพวัตถุดิบหรืออาหาร"
+                    }
+                    หาก "มี" วัตถุดิบ ให้วิเคราะห์และแนะนำสูตรอาหารสำหรับสถานที่ "${currentCookingLocation}" (home/condo/camping) ตอบเป็น JSON ในรูปแบบนี้:
+                    {
+                        "isFood": true,
+                        "detectedIngredients": ["ชื่อวัตถุดิบ1", "ชื่อวัตถุดิบ2"],
                         "recipes": [
                             {
                                 "id": "1",
@@ -786,14 +793,25 @@
                     res = await callGeminiAPI(prompt, imageList);
                 } else {
                     await new Promise(r => setTimeout(r, 1200));
-                    res = getSimulatedRecipesByLocation(currentCookingLocation);
+                    // จำลองการตอบกลับว่ามีอาหาร (สำหรับทดสอบตอนไม่มี API Key)
+                    res = { isFood: true, ...getSimulatedRecipesByLocation(currentCookingLocation) };
                 }
+
+                // ตรวจสอบว่า AI พบอาหารหรือไม่
+                if (res.isFood === false) {
+                    showToast(res.message || "ไม่พบวัตถุดิบที่จะนำมาทำอาหารได้ แนะนำให้อัปโหลดรูปภาพวัตถุดิบใหม่", "warning");
+                    hideLoading();
+                    return; // หยุดการทำงาน ไม่แสดงผลลัพธ์
+                }
+
                 displayAnalysisResults(res);
                 addEXP(15, "สแกนคิดเมนูด้วย AI");
             } catch (err) {
                 showToast(" เกิดข้อผิดพลาด: " + err.message, "error");
             } finally {
-                hideLoading();
+                if(document.getElementById('resultSection').classList.contains('hidden')){
+                    hideLoading();
+                }
             }
         });
 
