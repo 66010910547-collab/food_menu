@@ -688,37 +688,69 @@
             return 1000;
         }
 
-        // Image Upload Management
+        // Image Upload Management & Optimization (SPEED UP)
         const cameraInput = document.getElementById('cameraInput');
         const galleryInput = document.getElementById('galleryInput');
 
         if (cameraInput) {
             cameraInput.addEventListener('change', (e) => {
-                if (e.target.files?.[0]) processFiles([e.target.files[0]]);
+                if (e.target.files?.[0]) processFilesWithCompression([e.target.files[0]]);
                 e.target.value = '';
             });
         }
 
         if (galleryInput) {
             galleryInput.addEventListener('change', (e) => {
-                if (e.target.files?.length > 0) processFiles(Array.from(e.target.files));
+                if (e.target.files?.length > 0) processFilesWithCompression(Array.from(e.target.files));
                 e.target.value = '';
             });
         }
 
-        function processFiles(files) {
+        // Optimized Image Processing (Resize & Compress before Base64)
+        function processFilesWithCompression(files) {
             files.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (event) => {
-                    const dataUrl = event.target.result;
-                    const base64 = dataUrl.split(',')[1];
-                    const id = Date.now() + Math.random().toString(36).substring(2, 9);
-                    imageList.push({ id, base64, dataUrl });
-                    renderImageGrid();
+                    const img = new Image();
+                    img.onload = () => {
+                        // ตั้งค่าขนาดสูงสุด (ปรับลดลงเพื่อให้ประมวลผลไวขึ้นมาก)
+                        const MAX_WIDTH = 800;
+                        const MAX_HEIGHT = 800;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+
+                        // วาดรูปลงบน Canvas เพื่อย่อขนาด
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // แปลงเป็น JPEG แบบลดคุณภาพเหลือ 70% เพื่อให้ขนาดไฟล์เล็กที่สุด ส่ง API ได้ไวขึ้น
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7); 
+                        const base64 = dataUrl.split(',')[1];
+                        const id = Date.now() + Math.random().toString(36).substring(2, 9);
+                        
+                        imageList.push({ id, base64, dataUrl });
+                        renderImageGrid();
+                    };
+                    img.src = event.target.result;
                 };
                 reader.readAsDataURL(file);
             });
-            showToast(`อัปโหลดรูปวัตถุดิบแล้ว ${files.length} รายการ`, 'success');
+            showToast(`อัปโหลดและเตรียมรูปภาพแล้ว ${files.length} รายการ (ประมวลผลไวขึ้น)`, 'success');
         }
 
         function renderImageGrid() {
@@ -792,8 +824,8 @@
                     }`;
                     res = await callGeminiAPI(prompt, imageList);
                 } else {
-                    await new Promise(r => setTimeout(r, 1200));
-                    // จำลองการตอบกลับว่ามีอาหาร (สำหรับทดสอบตอนไม่มี API Key)
+                    // ลดเวลาดีเลย์จำลองลง เพื่อให้โหมดออฟไลน์ทำงานไวขึ้น (จาก 1200ms เหลือ 300ms)
+                    await new Promise(r => setTimeout(r, 300));
                     res = { isFood: true, ...getSimulatedRecipesByLocation(currentCookingLocation) };
                 }
 
@@ -1316,7 +1348,9 @@
 
         async function triggerWeeklyAIPlan() {
             showLoading("กำลังจัดตารางอาหารประจำสัปดาห์...", "AI กำลังคำนวณอาหารให้เหมาะกับคุณ");
-            await new Promise(r => setTimeout(r, 1200));
+            
+            // ลดเวลาดีเลย์จำลองลง เพื่อให้โหมดออฟไลน์ทำงานไวขึ้น
+            await new Promise(r => setTimeout(r, 300));
             
             const weeklyPlan = [
                 { day: "วันจันทร์", breakfast: "ไข่กระทะทรงเครื่อง", lunch: "ข้าวมันไก่ต้ม", dinner: "ต้มจืดผักกาดขาวอกไก่", missingIngredients: ["กุนเชียง", "ต้นหอม"] },
