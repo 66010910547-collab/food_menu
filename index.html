@@ -1,703 +1,720 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Camera, 
-  ShoppingBag, 
-  Utensils, 
-  Award, 
-  MessageSquare, 
-  Star, 
-  Plus, 
-  ShoppingCart, 
-  CheckCircle, 
-  Sparkles, 
-  ChefHat, 
-  BookOpen
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChefConnect - AI Recipe & Culinary Marketplace</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts Prompt -->
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Prompt', sans-serif; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen pb-20">
 
-export default function App() {
-  // Navigation State
-  const [activeTab, setActiveTab] = useState('scan'); // 'scan', 'recipes', 'market', 'profile'
-  
-  // Gamification & User State
-  const [userScore, setUserScore] = useState(120);
-  const [userRole, setUserRole] = useState('เชฟคลาสสิก');
-  const [cart, setCart] = useState([]);
-  
-  // Image Recognition & Recipe Generation State
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [base64Image, setBase64Image] = useState(null);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [generatedRecipe, setGeneratedRecipe] = useState(null);
-  const [apiError, setApiError] = useState(null);
-  
-  // Recipe Feed & Comments State
-  const [recipes, setRecipes] = useState([
-    {
-      id: 1,
-      title: 'ผัดกะเพราไข่ดาวทรงเครื่อง',
-      author: 'เชฟสมศักดิ์ (มาสเตอร์เชฟ)',
-      image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80',
-      time: '15 นาที',
-      difficulty: 'ง่าย',
-      ingredients: ['หมูสับ 200g', 'ใบกะเพรา 1 กำ', 'พริกจินดา 5 เม็ด', 'กระเทียม 3 กลีบ', 'น้ำปลา', 'ซอสหอยนางรม'],
-      instructions: [
-        'โขลกพริกกับกระเทียมให้พอหยาบ',
-        'ตั้งกระทะใช้น้ำมันนิดหน่อย ใส่พริกกระเทียมลงผัดให้หอม',
-        'ใส่หมูสับลงไปผัดจนสุกปรุงรสด้วยน้ำปลา ซอสหอยนางรม และน้ำตาลทราย',
-        'ใส่ใบกะเพรา เร่งไฟแรง ผัดเร็วๆ แล้วปิดไฟ ตักใส่จานเสิร์ฟพร้อมไข่ดาว'
-      ],
-      comments: [
-        { id: 1, user: 'น้องมด', role: 'เชฟฝึกหัด', text: 'ทำตามแล้วอร่อยมากครับ เผ็ดกำลังดีเลย!', rating: 5 },
-        { id: 2, user: 'ป้าเพ็ญ', role: 'เชฟคลาสสิก', text: 'เติมน้ำสต๊อกไปนิดนึงจะขลุกขลิกอร่อยยิ่งขึ้นค่ะ', rating: 4 }
-      ]
-    },
-    {
-      id: 2,
-      title: 'ต้มยำกุ้งน้ำข้นสูตรโบราณ',
-      author: 'เชฟสายฝน (เชฟคลาสสิก)',
-      image: 'https://images.unsplash.com/photo-1548943487-a2e4e43b4853?auto=format&fit=crop&w=600&q=80',
-      time: '25 นาที',
-      difficulty: 'ปานกลาง',
-      ingredients: ['กุ้งแม่น้ำ 4 ตัว', 'เห็ดฟาง 100g', 'ข่า ตะไคร้ ใบมะกรูด', 'นมข้นนมสด 3 ช้อนโต๊ะ', 'น้ำพริกเผา 2 ช้อนโต๊ะ'],
-      instructions: [
-        'ต้มน้ำให้เดือด ใส่ข่า ตะไคร้ ใบมะกรูด หอมแดง',
-        'ใส่น้ำพริกเผาและเห็ดฟาง ต้มจนสุก',
-        'ใส่กุ้งลงไป (ห้ามคน) พอสุกปิดไฟ',
-        'ปรุงรสด้วยน้ำปลา น้ำมะนาว พริกขี้หนู และใส่นมสดคนให้เข้ากัน'
-      ],
-      comments: [
-        { id: 1, user: 'บอย ซ่า', role: 'เชฟฝึกหัด', text: 'หอมข่าตะไคร้มากๆ ต้มยำกุ้งจานโปรดเลย', rating: 5 }
-      ]
-    }
-  ]);
+  <!-- HEADER BAR -->
+  <header className="bg-emerald-700 bg-emerald-700 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-amber-400 text-emerald-950 p-2.5 rounded-xl shadow-sm flex items-center justify-center">
+          <i class="fa-solid fa-utensils text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-xl leading-none tracking-wide">ChefConnect</h1>
+          <p class="text-[11px] text-emerald-200 mt-0.5">AI Cook & Culinary Market</p>
+        </div>
+      </div>
 
-  // Market Products State
-  const [products] = useState([
-    {
-      id: 1,
-      name: 'พริกจินดาแดงสดออร์แกนิก (200g)',
-      seller: 'ไร่สุวรรณภูมิ',
-      price: 35,
-      rating: 4.8,
-      image: 'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?auto=format&fit=crop&w=500&q=80',
-      category: 'ผักสด'
-    },
-    {
-      id: 2,
-      name: 'น้ำปลาแท้เกรดพรีเมียม หมักธรรมชาติ 2 ปี',
-      seller: 'ตราคนขยัน',
-      price: 89,
-      rating: 4.9,
-      image: 'https://images.unsplash.com/photo-1610970881699-44a5587cabec?auto=format&fit=crop&w=500&q=80',
-      category: 'เครื่องปรุง'
-    },
-    {
-      id: 3,
-      name: 'เซ็ตเครื่องต้มยำสด (ข่า ตะไคร้ ใบมะกรูด พริก มะนาว)',
-      seller: 'ตลาดสดออนไลน์',
-      price: 49,
-      rating: 4.7,
-      image: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=500&q=80',
-      category: 'วัตถุดิบพร้อมปรุง'
-    },
-    {
-      id: 4,
-      name: 'เนื้อหมูสันนอกเกรด A ออร์แกนิก (500g)',
-      seller: 'ฟาร์มหมูอารมณ์ดี',
-      price: 135,
-      rating: 5.0,
-      image: 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?auto=format&fit=crop&w=500&q=80',
-      category: 'เนื้อสัตว์'
-    }
-  ]);
+      <!-- User Score & Badge Preview -->
+      <div class="flex items-center space-x-3">
+        <div class="bg-emerald-800/80 px-3.5 py-1.5 rounded-full border border-emerald-600 flex items-center space-x-2 text-xs">
+          <i class="fa-solid fa-award text-amber-300"></i>
+          <div>
+            <span id="header-user-role" class="font-semibold text-amber-200">เชฟคลาสสิก</span>
+            <span id="header-user-score" class="ml-1 text-emerald-300">(120 pts)</span>
+          </div>
+        </div>
 
-  const [newComment, setNewComment] = useState({});
-  const [commentRating] = useState({});
+        <!-- Shopping Cart Button -->
+        <button onclick="switchTab('market')" class="relative p-2 rounded-full hover:bg-emerald-600 transition">
+          <i class="fa-solid fa-cart-shopping text-lg"></i>
+          <span id="cart-badge" class="hidden absolute -top-1 -right-1 bg-amber-500 text-emerald-950 text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-emerald-700">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
 
-  // Calculate level based on score
-  useEffect(() => {
-    if (userScore >= 300) {
-      setUserRole('มาสเตอร์เชฟ');
-    } else if (userScore >= 100) {
-      setUserRole('เชฟคลาสสิก');
-    } else {
-      setUserRole('เชฟฝึกหัด');
-    }
-  }, [userScore]);
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-1 max-w-5xl w-full mx-auto p-4 md:p-6">
 
-  // Handle Image Upload & Conversion
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedImage(URL.createObjectURL(file));
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result.split(',')[1];
-        setBase64Image(base64String);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+    <!-- TAB 1: AI SCAN & RECIPE SUGGESTION -->
+    <section id="scan-tab" class="tab-content active space-y-6">
+      <!-- Banner -->
+      <div class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-2xl p-6 shadow-lg relative overflow-hidden">
+        <div class="relative z-10 max-w-lg">
+          <span class="bg-emerald-500/40 text-emerald-100 text-xs font-semibold px-2.5 py-1 rounded-md uppercase tracking-wide">
+            ระบบ AI อัจฉริยะ
+          </span>
+          <h2 class="text-2xl font-bold mt-2">ถ่ายรูปวัตถุดิบ ให้ AI แนะนำเมนูเด็ด!</h2>
+          <p class="text-emerald-100 text-sm mt-1">
+            ไม่รู้จะทำอะไรทาน? ถ่ายรูปวัตถุดิบในตู้เย็น แล้วเราจะคำนวณสูตรอาหารพร้อมวิธีทำให้อย่างมืออาชีพ
+          </p>
+        </div>
+        <i class="fa-solid fa-wand-magic-sparkles absolute right-4 bottom-2 text-7xl text-emerald-500/20"></i>
+      </div>
 
-  // Add Score Points Function
-  const addPoints = (pts) => {
-    setUserScore(prev => prev + pts);
-  };
+      <!-- Upload Area -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 text-center">
+        <div class="max-w-md mx-auto">
+          
+          <div id="image-preview-container" class="hidden relative rounded-xl overflow-hidden mb-4 border-2 border-emerald-500 shadow-md">
+            <img id="image-preview" src="" alt="Uploaded ingredient" class="w-full h-64 object-cover">
+            <button onclick="clearImage()" class="absolute top-2 right-2 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow hover:bg-red-700 transition">
+              ✕
+            </button>
+          </div>
 
-  // Call Gemini API to analyze ingredients & suggest recipes
-  const analyzeIngredients = async () => {
-    if (!base64Image) return;
-    
-    setAnalyzing(true);
-    setApiError(null);
-    setGeneratedRecipe(null);
-
-    const apiKey = ""; // Runtime handled key
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-
-    const promptText = `
-      คุณคือเชฟมืออาชีพ วิเคราะห์รูปภาพวัตถุดิบอาหารในภาพนี้ แล้วตอบกลับมาในรูปแบบ JSON โครงสร้างดังนี้:
-      {
-        "detectedIngredients": ["ชื่อวัตถุดิบ1", "ชื่อวัตถุดิบ2"],
-        "recipeName": "ชื่อเมนูแนะนำ",
-        "cookingTime": "ระยะเวลาการทำ (เช่น 20 นาที)",
-        "difficulty": "ระดับความยาก (ง่าย, ปานกลาง, ยาก)",
-        "description": "คำอธิบายสั้นๆ ของเมนูนี้",
-        "ingredientsList": ["ส่วนผสม 1 พร้อมปริมาณ", "ส่วนผสม 2 พร้อมปริมาณ"],
-        "steps": ["ขั้นตอนที่ 1...", "ขั้นตอนที่ 2..."],
-        "chefTip": "เคล็ดลับเด็ดในการทำเมนูนี้"
-      }
-      ตอบเป็นภาษาไทยเท่านั้น และต้องส่งคืนเฉพาะ JSON string ที่ถูกต้อง ไม่ต้องมีคำเปิด/ปิด
-    `;
-
-    let attempts = 0;
-    const maxAttempts = 5;
-    
-    while (attempts < maxAttempts) {
-      try {
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [
-                { text: promptText },
-                { inlineData: { mimeType: 'image/jpeg', data: base64Image } }
-              ]
-            }],
-            generationConfig: {
-              responseMimeType: "application/json"
-            }
-          })
-        });
-
-        if (!response.ok) throw new Error(`HTTP error status: ${response.status}`);
-        
-        const data = await response.json();
-        const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
-        if (textResult) {
-          const parsed = JSON.parse(textResult);
-          setGeneratedRecipe(parsed);
-          addPoints(15);
-          break;
-        }
-      } catch (err) {
-        attempts++;
-        if (attempts >= maxAttempts) {
-          console.error(err);
-          setApiError('ไม่สามารถวิเคราะห์รูปภาพได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง');
-        } else {
-          await new Promise(res => setTimeout(res, Math.pow(2, attempts - 1) * 1000));
-        }
-      } finally {
-        if (attempts >= maxAttempts || generatedRecipe) {
-          setAnalyzing(false);
-        }
-      }
-    }
-  };
-
-  // Handle Add to Cart
-  const addToCart = (product) => {
-    setCart(prev => [...prev, product]);
-    addPoints(5);
-  };
-
-  // Add Comment to Recipe
-  const handleAddComment = (recipeId) => {
-    const text = newComment[recipeId];
-    const rating = commentRating[recipeId] || 5;
-    if (!text || text.trim() === '') return;
-
-    setRecipes(prev => prev.map(rec => {
-      if (rec.id === recipeId) {
-        return {
-          ...rec,
-          comments: [
-            ...rec.comments,
-            { id: Date.now(), user: 'คุณ (ผู้ใช้)', role: userRole, text, rating }
-          ]
-        };
-      }
-      return rec;
-    }));
-
-    setNewComment(prev => ({ ...prev, [recipeId]: '' }));
-    addPoints(10);
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
-      
-      {/* HEADER BAR */}
-      <header className="bg-emerald-700 text-white shadow-md sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="bg-amber-400 text-emerald-950 p-2 rounded-xl shadow">
-              <ChefHat className="h-6 w-6" />
+          <label id="upload-label" class="border-2 border-dashed border-emerald-300 bg-emerald-50/50 hover:bg-emerald-50 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer transition group mb-4">
+            <div class="bg-emerald-100 text-emerald-600 p-4 rounded-full mb-3 group-hover:scale-110 transition">
+              <i class="fa-solid fa-camera text-2xl"></i>
             </div>
+            <span class="font-semibold text-slate-700 text-sm">กดเพื่อถ่ายรูป หรือ เลือกรูปวัตถุดิบ</span>
+            <span class="text-xs text-slate-400 mt-1">รองรับ JPG, PNG</span>
+            <input type="file" id="image-input" accept="image/*" onchange="handleImageSelect(event)" class="hidden">
+          </label>
+
+          <button id="analyze-btn" onclick="analyzeIngredients()" disabled class="w-full py-3 px-6 rounded-xl font-bold text-white shadow-md flex items-center justify-center space-x-2 transition bg-slate-300 cursor-not-allowed">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span id="btn-text">วิเคราะห์และแนะนำเมนู</span>
+          </button>
+          
+          <p id="api-error" class="text-red-500 text-xs mt-2 hidden"></p>
+        </div>
+      </div>
+
+      <!-- Generated Recipe Result Container -->
+      <div id="recipe-result" class="hidden bg-white rounded-2xl p-6 shadow-md border border-emerald-100">
+        <div class="flex items-center space-x-2 text-emerald-600 font-semibold text-sm mb-2">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>พบเมนูแนะนำสำหรับคุณ! (+15 แต้ม)</span>
+        </div>
+
+        <div class="border-b border-slate-100 pb-4 mb-4">
+          <div class="flex justify-between items-start">
             <div>
-              <h1 className="font-bold text-xl leading-none">ChefConnect</h1>
-              <p className="text-xs text-emerald-200">AI Cook & Culinary Market</p>
+              <h3 id="res-title" class="text-2xl font-bold text-slate-800"></h3>
+              <p id="res-desc" class="text-sm text-slate-500 mt-1"></p>
+            </div>
+            <span id="res-difficulty" class="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-1 rounded-full"></span>
+          </div>
+
+          <div class="mt-3 flex flex-wrap gap-1.5 items-center">
+            <span class="text-xs text-slate-400 mr-1">ตรวจพบวัตถุดิบ:</span>
+            <div id="res-detected-pills" class="flex flex-wrap gap-1"></div>
+          </div>
+        </div>
+
+        <!-- Recipe Grid -->
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <h4 class="font-bold text-slate-800 flex items-center space-x-2 mb-3">
+              <i class="fa-solid fa-utensils text-emerald-600"></i>
+              <span>ส่วนผสมที่ต้องใช้</span>
+            </h4>
+            <ul id="res-ingredients" class="space-y-2 text-sm text-slate-600"></ul>
+          </div>
+
+          <div>
+            <h4 class="font-bold text-slate-800 flex items-center space-x-2 mb-3">
+              <i class="fa-solid fa-list-check text-emerald-600"></i>
+              <span>ขั้นตอนการทำ</span>
+            </h4>
+            <ol id="res-steps" class="space-y-3 text-sm text-slate-600"></ol>
+          </div>
+        </div>
+
+        <div id="res-tip-box" class="mt-6 bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl hidden">
+          <p class="text-xs font-bold text-amber-800 uppercase">💡 เคล็ดลับจากเชฟ</p>
+          <p id="res-tip" class="text-sm text-amber-900 mt-1"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: RECIPES FEED & COMMENTS -->
+    <section id="recipes-tab" class="tab-content space-y-6">
+      <div>
+        <h2 class="text-xl font-bold text-slate-800">สูตรอาหารจากชุมชนเชฟ</h2>
+        <p class="text-xs text-slate-500">แบ่งปันสูตรเด็ด ร่วมรีวิว และแลกเปลี่ยนไอเดีย</p>
+      </div>
+
+      <div id="recipes-list" class="space-y-6">
+        <!-- Rendered via JavaScript -->
+      </div>
+    </section>
+
+    <!-- TAB 3: MARKETPLACE -->
+    <section id="market-tab" class="tab-content space-y-6">
+      <div>
+        <h2 class="text-xl font-bold text-slate-800">ตลาดสดและวัตถุดิบออนไลน์</h2>
+        <p class="text-xs text-slate-500">ซื้อ-ขายวัตถุดิบคุณภาพดี ส่งตรงจากเกษตรกรและผู้ผลิต</p>
+      </div>
+
+      <!-- Cart Banner -->
+      <div id="cart-banner" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-basket-shopping text-amber-600"></i>
+          <span id="cart-summary" class="text-xs font-semibold text-amber-900"></span>
+        </div>
+        <button onclick="checkout()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-1.5 rounded-lg font-bold transition">
+          สั่งซื้อสินค้า
+        </button>
+      </div>
+
+      <!-- Products Grid -->
+      <div id="products-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Rendered via JavaScript -->
+      </div>
+    </section>
+
+    <!-- TAB 4: PROFILE & LEVEL PROGRESS -->
+    <section id="profile-tab" class="tab-content space-y-6">
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+        <div class="flex items-center space-x-4 mb-6">
+          <div class="bg-gradient-to-tr from-amber-400 to-amber-200 text-slate-900 font-extrabold p-4 rounded-2xl text-2xl shadow flex items-center justify-center">
+            <i class="fa-solid fa-hat-cowboy-side"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">คุณ (ผู้ใช้งานเดโม)</h2>
+            <p id="profile-role" class="text-xs text-emerald-600 font-semibold"></p>
+            <p class="text-xs text-slate-400 mt-0.5">สะสมคะแนนจากการมีส่วนร่วมในแอป</p>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
+          <div class="flex justify-between items-center text-xs font-bold text-slate-700 mb-2">
+            <span id="profile-points">คะแนนสะสมของคุณ: 0 แต้ม</span>
+            <span id="profile-target">เป้าหมายถัดไป: 100 pts</span>
+          </div>
+          <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+            <div id="profile-progress-bar" class="bg-gradient-to-r from-emerald-500 to-amber-400 h-full transition-all duration-500 w-0"></div>
+          </div>
+        </div>
+
+        <!-- Levels Info -->
+        <h3 class="font-bold text-slate-800 text-sm mb-3">ระดับเชฟทั้งหมด</h3>
+        <div class="space-y-3">
+          <div id="lvl-1" class="p-3 rounded-xl border flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="text-2xl">🍳</span>
+              <div>
+                <p class="font-bold text-xs text-slate-800">เชฟฝึกหัด (Apprentice Chef)</p>
+                <p class="text-[10px] text-slate-500">0 - 99 คะแนน | เริ่มต้นเส้นทางการทำอาหาร</p>
+              </div>
+            </div>
+            <span id="badge-lvl-1" class="hidden text-xs bg-amber-500 text-white px-2 py-0.5 rounded font-bold">ปัจจุบัน</span>
+          </div>
+
+          <div id="lvl-2" class="p-3 rounded-xl border flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="text-2xl">👨‍🍳</span>
+              <div>
+                <p class="font-bold text-xs text-slate-800">เชฟคลาสสิก (Classic Chef)</p>
+                <p class="text-[10px] text-slate-500">100 - 299 คะแนน | เชี่ยวชาญเมนูหลากหลาย</p>
+              </div>
+            </div>
+            <span id="badge-lvl-2" class="hidden text-xs bg-amber-500 text-white px-2 py-0.5 rounded font-bold">ปัจจุบัน</span>
+          </div>
+
+          <div id="lvl-3" class="p-3 rounded-xl border flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="text-2xl">👑</span>
+              <div>
+                <p class="font-bold text-xs text-slate-800">มาสเตอร์เชฟ (Master Chef)</p>
+                <p class="text-[10px] text-slate-500">300+ คะแนน | ผู้เชี่ยวชาญระดับอาจารย์</p>
+              </div>
+            </div>
+            <span id="badge-lvl-3" class="hidden text-xs bg-amber-500 text-white px-2 py-0.5 rounded font-bold">ปัจจุบัน</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM NAVIGATION BAR -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 py-2.5 px-6 shadow-lg z-50">
+    <div class="max-w-md mx-auto flex justify-between items-center">
+      <button onclick="switchTab('scan')" id="nav-scan" class="nav-btn flex flex-col items-center space-y-1 text-emerald-600 font-bold">
+        <i class="fa-solid fa-camera text-lg"></i>
+        <span class="text-[10px]">AI สแกน</span>
+      </button>
+
+      <button onclick="switchTab('recipes')" id="nav-recipes" class="nav-btn flex flex-col items-center space-y-1 text-slate-400">
+        <i class="fa-solid fa-book-open text-lg"></i>
+        <span class="text-[10px]">สูตรอาหาร</span>
+      </button>
+
+      <button onclick="switchTab('market')" id="nav-market" class="nav-btn flex flex-col items-center space-y-1 text-slate-400">
+        <i class="fa-solid fa-store text-lg"></i>
+        <span class="text-[10px]">ตลาดสด</span>
+      </button>
+
+      <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn flex flex-col items-center space-y-1 text-slate-400">
+        <i class="fa-solid fa-award text-lg"></i>
+        <span class="text-[10px]">ระดับเชฟ</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // Global Application State
+    let userScore = 120;
+    let userRole = 'เชฟคลาสสิก';
+    let base64Image = null;
+    let cart = [];
+
+    let recipes = [
+      {
+        id: 1,
+        title: 'ผัดกะเพราไข่ดาวทรงเครื่อง',
+        author: 'เชฟสมศักดิ์ (มาสเตอร์เชฟ)',
+        image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80',
+        time: '15 นาที',
+        difficulty: 'ง่าย',
+        ingredients: ['หมูสับ 200g', 'ใบกะเพรา 1 กำ', 'พริกจินดา 5 เม็ด', 'กระเทียม 3 กลีบ', 'น้ำปลา', 'ซอสหอยนางรม'],
+        comments: [
+          { id: 1, user: 'น้องมด', role: 'เชฟฝึกหัด', text: 'ทำตามแล้วอร่อยมากครับ เผ็ดกำลังดีเลย!', rating: 5 },
+          { id: 2, user: 'ป้าเพ็ญ', role: 'เชฟคลาสสิก', text: 'เติมน้ำสต๊อกไปนิดนึงจะขลุกขลิกอร่อยยิ่งขึ้นค่ะ', rating: 4 }
+        ]
+      },
+      {
+        id: 2,
+        title: 'ต้มยำกุ้งน้ำข้นสูตรโบราณ',
+        author: 'เชฟสายฝน (เชฟคลาสสิก)',
+        image: 'https://images.unsplash.com/photo-1548943487-a2e4e43b4853?auto=format&fit=crop&w=600&q=80',
+        time: '25 นาที',
+        difficulty: 'ปานกลาง',
+        ingredients: ['กุ้งแม่น้ำ 4 ตัว', 'เห็ดฟาง 100g', 'ข่า ตะไคร้ ใบมะกรูด', 'นมข้นนมสด 3 ช้อนโต๊ะ', 'น้ำพริกเผา 2 ช้อนโต๊ะ'],
+        comments: [
+          { id: 1, user: 'บอย ซ่า', role: 'เชฟฝึกหัด', text: 'หอมข่าตะไคร้มากๆ ต้มยำกุ้งจานโปรดเลย', rating: 5 }
+        ]
+      }
+    ];
+
+    const products = [
+      {
+        id: 1,
+        name: 'พริกจินดาแดงสดออร์แกนิก (200g)',
+        seller: 'ไร่สุวรรณภูมิ',
+        price: 35,
+        rating: 4.8,
+        image: 'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?auto=format&fit=crop&w=500&q=80',
+        category: 'ผักสด'
+      },
+      {
+        id: 2,
+        name: 'น้ำปลาแท้เกรดพรีเมียม หมักธรรมชาติ 2 ปี',
+        seller: 'ตราคนขยัน',
+        price: 89,
+        rating: 4.9,
+        image: 'https://images.unsplash.com/photo-1610970881699-44a5587cabec?auto=format&fit=crop&w=500&q=80',
+        category: 'เครื่องปรุง'
+      },
+      {
+        id: 3,
+        name: 'เซ็ตเครื่องต้มยำสด (ข่า ตะไคร้ ใบมะกรูด พริก มะนาว)',
+        seller: 'ตลาดสดออนไลน์',
+        price: 49,
+        rating: 4.7,
+        image: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=500&q=80',
+        category: 'วัตถุดิบพร้อมปรุง'
+      },
+      {
+        id: 4,
+        name: 'เนื้อหมูสันนอกเกรด A ออร์แกนิก (500g)',
+        seller: 'ฟาร์มหมูอารมณ์ดี',
+        price: 135,
+        rating: 5.0,
+        image: 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?auto=format&fit=crop&w=500&q=80',
+        category: 'เนื้อสัตว์'
+      }
+    ];
+
+    // Initialize Page
+    document.addEventListener('DOMContentLoaded', () => {
+      updateScoreAndRole();
+      renderRecipes();
+      renderProducts();
+    });
+
+    // Navigation Switcher
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => {
+        el.classList.remove('text-emerald-600', 'font-bold');
+        el.classList.add('text-slate-400');
+      });
+
+      document.getElementById(`${tabId}-tab`).classList.add('active');
+      const activeNav = document.getElementById(`nav-${tabId}`);
+      activeNav.classList.remove('text-slate-400');
+      activeNav.classList.add('text-emerald-600', 'font-bold');
+    }
+
+    // Points & Level Management
+    function addPoints(pts) {
+      userScore += pts;
+      updateScoreAndRole();
+    }
+
+    function updateScoreAndRole() {
+      if (userScore >= 300) {
+        userRole = 'มาสเตอร์เชฟ';
+      } else if (userScore >= 100) {
+        userRole = 'เชฟคลาสสิก';
+      } else {
+        userRole = 'เชฟฝึกหัด';
+      }
+
+      // Update Header
+      document.getElementById('header-user-role').innerText = userRole;
+      document.getElementById('header-user-score').innerText = `(${userScore} pts)`;
+
+      // Update Profile Tab
+      document.getElementById('profile-role').innerText = userRole;
+      document.getElementById('profile-points').innerText = `คะแนนสะสมของคุณ: ${userScore} แต้ม`;
+
+      let targetText = userScore < 100 ? 'เป้าหมายถัดไป: 100 pts (เชฟคลาสสิก)' : 'เป้าหมายถัดไป: 300 pts (มาสเตอร์เชฟ)';
+      if (userScore >= 300) targetText = 'คุณถึงระดับสูงสุดแล้ว!';
+      document.getElementById('profile-target').innerText = targetText;
+
+      const progressPercent = Math.min(100, (userScore / 300) * 100);
+      document.getElementById('profile-progress-bar').style.width = `${progressPercent}%`;
+
+      // Level Cards Highlight
+      document.getElementById('lvl-1').className = userScore < 100 ? 'p-3 rounded-xl border flex items-center justify-between bg-amber-50 border-amber-300' : 'p-3 rounded-xl border flex items-center justify-between bg-slate-50 border-slate-200 opacity-60';
+      document.getElementById('badge-lvl-1').style.display = userScore < 100 ? 'inline-block' : 'none';
+
+      document.getElementById('lvl-2').className = (userScore >= 100 && userScore < 300) ? 'p-3 rounded-xl border flex items-center justify-between bg-amber-50 border-amber-300' : 'p-3 rounded-xl border flex items-center justify-between bg-slate-50 border-slate-200';
+      document.getElementById('badge-lvl-2').style.display = (userScore >= 100 && userScore < 300) ? 'inline-block' : 'none';
+
+      document.getElementById('lvl-3').className = userScore >= 300 ? 'p-3 rounded-xl border flex items-center justify-between bg-amber-50 border-amber-300' : 'p-3 rounded-xl border flex items-center justify-between bg-slate-50 border-slate-200';
+      document.getElementById('badge-lvl-3').style.display = userScore >= 300 ? 'inline-block' : 'none';
+    }
+
+    // Image Upload & Conversion
+    function handleImageSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          base64Image = reader.result.split(',')[1];
+          document.getElementById('image-preview').src = reader.result;
+          document.getElementById('image-preview-container').classList.remove('hidden');
+          document.getElementById('upload-label').classList.add('hidden');
+
+          const btn = document.getElementById('analyze-btn');
+          btn.disabled = false;
+          btn.classList.remove('bg-slate-300', 'cursor-not-allowed');
+          btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700', 'active:scale-95');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function clearImage() {
+      base64Image = null;
+      document.getElementById('image-input').value = '';
+      document.getElementById('image-preview-container').classList.add('hidden');
+      document.getElementById('upload-label').classList.remove('hidden');
+      document.getElementById('recipe-result').classList.add('hidden');
+
+      const btn = document.getElementById('analyze-btn');
+      btn.disabled = true;
+      btn.classList.add('bg-slate-300', 'cursor-not-allowed');
+      btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700', 'active:scale-95');
+    }
+
+    // AI Recipe Analysis Call
+    async function analyzeIngredients() {
+      if (!base64Image) return;
+
+      const btn = document.getElementById('analyze-btn');
+      const btnText = document.getElementById('btn-text');
+      const errBox = document.getElementById('api-error');
+
+      btn.disabled = true;
+      btnText.innerText = 'กำลังวิเคราะห์วัตถุดิบ...';
+      errBox.classList.add('hidden');
+
+      const apiKey = ""; // Managed runtime API key
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+      const promptText = `
+        คุณคือเชฟมืออาชีพ วิเคราะห์รูปภาพวัตถุดิบอาหารในภาพนี้ แล้วตอบกลับมาในรูปแบบ JSON โครงสร้างดังนี้:
+        {
+          "detectedIngredients": ["ชื่อวัตถุดิบ1", "ชื่อวัตถุดิบ2"],
+          "recipeName": "ชื่อเมนูแนะนำ",
+          "cookingTime": "ระยะเวลาการทำ (เช่น 20 นาที)",
+          "difficulty": "ระดับความยาก (ง่าย, ปานกลาง, ยาก)",
+          "description": "คำอธิบายสั้นๆ ของเมนูนี้",
+          "ingredientsList": ["ส่วนผสม 1 พร้อมปริมาณ", "ส่วนผสม 2 พร้อมปริมาณ"],
+          "steps": ["ขั้นตอนที่ 1...", "ขั้นตอนที่ 2..."],
+          "chefTip": "เคล็ดลับเด็ดในการทำเมนูนี้"
+        }
+        ตอบเป็นภาษาไทยเท่านั้น และต้องส่งคืนเฉพาะ JSON string ที่ถูกต้อง ไม่ต้องมีคำเปิด/ปิด
+      `;
+
+      let attempts = 0;
+      const maxAttempts = 5;
+
+      while (attempts < maxAttempts) {
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { text: promptText },
+                  { inlineData: { mimeType: 'image/jpeg', data: base64Image } }
+                ]
+              }],
+              generationConfig: { responseMimeType: "application/json" }
+            })
+          });
+
+          if (!response.ok) throw new Error(`HTTP error status: ${response.status}`);
+          const data = await response.json();
+          const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+          if (textResult) {
+            const recipe = JSON.parse(textResult);
+            renderGeneratedRecipe(recipe);
+            addPoints(15);
+            break;
+          }
+        } catch (err) {
+          attempts++;
+          if (attempts >= maxAttempts) {
+            console.error(err);
+            errBox.innerText = 'ไม่สามารถวิเคราะห์รูปภาพได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง';
+            errBox.classList.remove('hidden');
+          } else {
+            await new Promise(res => setTimeout(res, Math.pow(2, attempts - 1) * 1000));
+          }
+        } finally {
+          if (attempts >= maxAttempts) {
+            btn.disabled = false;
+            btnText.innerText = 'วิเคราะห์และแนะนำเมนู';
+          }
+        }
+      }
+    }
+
+    function renderGeneratedRecipe(recipe) {
+      document.getElementById('res-title').innerText = recipe.recipeName;
+      document.getElementById('res-desc').innerText = recipe.description;
+      document.getElementById('res-difficulty').innerText = recipe.difficulty;
+
+      // Detected Ingredients
+      const pillsBox = document.getElementById('res-detected-pills');
+      pillsBox.innerHTML = '';
+      (recipe.detectedIngredients || []).forEach(item => {
+        pillsBox.innerHTML += `<span class="bg-emerald-50 text-emerald-700 text-xs px-2 py-0.5 rounded-md border border-emerald-200">${item}</span>`;
+      });
+
+      // Ingredients List
+      const ingList = document.getElementById('res-ingredients');
+      ingList.innerHTML = '';
+      (recipe.ingredientsList || []).forEach(ing => {
+        ingList.innerHTML += `<li class="flex items-center space-x-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span><span>${ing}</span></li>`;
+      });
+
+      // Steps List
+      const stepsList = document.getElementById('res-steps');
+      stepsList.innerHTML = '';
+      (recipe.steps || []).forEach((step, idx) => {
+        stepsList.innerHTML += `<li class="flex space-x-3"><span class="flex-shrink-0 bg-emerald-100 text-emerald-800 font-bold rounded-full w-5 h-5 flex items-center justify-center text-xs">${idx + 1}</span><span>${step}</span></li>`;
+      });
+
+      // Tip
+      if (recipe.chefTip) {
+        document.getElementById('res-tip').innerText = recipe.chefTip;
+        document.getElementById('res-tip-box').classList.remove('hidden');
+      }
+
+      document.getElementById('recipe-result').classList.remove('hidden');
+      const btn = document.getElementById('analyze-btn');
+      btn.disabled = false;
+      document.getElementById('btn-text').innerText = 'วิเคราะห์และแนะนำเมนู';
+    }
+
+    // Community Recipes Feed
+    function renderRecipes() {
+      const container = document.getElementById('recipes-list');
+      container.innerHTML = recipes.map(rec => `
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="md:flex">
+            <div class="md:w-1/3 h-52 md:h-auto relative">
+              <img src="${rec.image}" alt="${rec.title}" class="w-full h-full object-cover">
+              <span class="absolute top-2 left-2 bg-slate-900/70 text-white text-xs px-2.5 py-1 rounded-full backdrop-blur-sm">
+                ⏱️ ${rec.time}
+              </span>
+            </div>
+            <div class="p-5 md:w-2/3 flex flex-col justify-between">
+              <div>
+                <div class="flex justify-between items-start">
+                  <h3 class="font-bold text-lg text-slate-800">${rec.title}</h3>
+                  <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-medium">
+                    ${rec.difficulty}
+                  </span>
+                </div>
+                <p class="text-xs text-slate-400 mt-0.5 mb-3">โดย ${rec.author}</p>
+
+                <div class="mb-3">
+                  <p class="text-xs font-semibold text-slate-500 mb-1">ส่วนผสมหลัก:</p>
+                  <div class="flex flex-wrap gap-1">
+                    ${rec.ingredients.map(ing => `<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">${ing}</span>`).join('')}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Comments Section -->
+              <div class="border-t border-slate-100 pt-3 mt-3">
+                <h4 class="text-xs font-bold text-slate-700 flex items-center space-x-1 mb-2">
+                  <i class="fa-solid fa-comments text-emerald-600"></i>
+                  <span>ความคิดเห็น (${rec.comments.length})</span>
+                </h4>
+
+                <div class="space-y-2 max-h-36 overflow-y-auto mb-3">
+                  ${rec.comments.map(c => `
+                    <div class="bg-slate-50 p-2.5 rounded-lg text-xs">
+                      <div class="flex justify-between items-center mb-1">
+                        <span class="font-bold text-slate-700">${c.user} <span class="text-slate-400 text-[10px]">(${c.role})</span></span>
+                        <div class="flex text-amber-400 text-[10px]">
+                          ${'<i class="fa-solid fa-star"></i>'.repeat(c.rating)}
+                        </div>
+                      </div>
+                      <p class="text-slate-600">${c.text}</p>
+                    </div>
+                  `).join('')}
+                </div>
+
+                <!-- Comment Input -->
+                <div class="flex space-x-2">
+                  <input
+                    type="text"
+                    id="comment-input-${rec.id}"
+                    placeholder="เขียนรีวิว หรือความคิดเห็น... (+10 แต้ม)"
+                    class="flex-1 bg-slate-100 text-xs rounded-xl px-3 py-2 border border-slate-200 focus:outline-none focus:border-emerald-500"
+                  >
+                  <button
+                    onclick="addComment(${rec.id})"
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3.5 py-2 rounded-xl font-semibold transition"
+                  >
+                    ส่ง
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addComment(recipeId) {
+      const input = document.getElementById(`comment-input-${recipeId}`);
+      const text = input.value.trim();
+      if (!text) return;
+
+      const recipe = recipes.find(r => r.id === recipeId);
+      if (recipe) {
+        recipe.comments.push({
+          id: Date.now(),
+          user: 'คุณ (ผู้ใช้)',
+          role: userRole,
+          text: text,
+          rating: 5
+        });
+        renderRecipes();
+        addPoints(10);
+      }
+    }
+
+    // Marketplace Products
+    function renderProducts() {
+      const container = document.getElementById('products-grid');
+      container.innerHTML = products.map(p => `
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col justify-between hover:shadow-md transition">
+          <div>
+            <div class="h-36 relative">
+              <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover">
+              <span class="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                ${p.category}
+              </span>
+            </div>
+            <div class="p-3">
+              <h3 class="font-bold text-xs text-slate-800 line-clamp-2">${p.name}</h3>
+              <p class="text-[10px] text-slate-400 mt-1">ร้าน: ${p.seller}</p>
+              
+              <div class="flex items-center space-x-1 mt-1 text-amber-500 text-xs">
+                <i class="fa-solid fa-star"></i>
+                <span class="font-semibold text-slate-600">${p.rating}</span>
+              </div>
             </div>
           </div>
 
-          {/* User Score & Badge Preview */}
-          <div className="flex items-center space-x-3">
-            <div className="bg-emerald-800/80 px-3 py-1.5 rounded-full border border-emerald-600 flex items-center space-x-2 text-xs">
-              <Award className="h-4 w-4 text-amber-300" />
-              <div>
-                <span className="font-semibold text-amber-200">{userRole}</span>
-                <span className="ml-1 text-emerald-300">({userScore} pts)</span>
-              </div>
-            </div>
-
-            {/* Shopping Cart Button */}
-            <button 
-              onClick={() => setActiveTab('market')}
-              className="relative p-2 rounded-full hover:bg-emerald-600 transition"
+          <div class="p-3 pt-0 flex justify-between items-center border-t border-slate-50">
+            <span class="font-extrabold text-emerald-700 text-sm">฿${p.price}</span>
+            <button
+              onclick="addToCart(${p.id})"
+              class="bg-emerald-100 hover:bg-emerald-600 text-emerald-700 hover:text-white p-2 rounded-xl transition flex items-center justify-center"
             >
-              <ShoppingCart className="h-5 w-5" />
-              {cart.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-amber-500 text-emerald-950 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {cart.length}
-                </span>
-              )}
+              <i class="fa-solid fa-plus"></i>
             </button>
           </div>
         </div>
-      </header>
+      `).join('');
+    }
 
-      {/* MAIN CONTENT AREA */}
-      <main className="flex-1 max-w-5xl w-full mx-auto p-4 md:p-6 pb-24">
-        
-        {/* TAB 1: AI SCAN & RECIPE SUGGESTION */}
-        {activeTab === 'scan' && (
-          <div className="space-y-6">
-            {/* Banner */}
-            <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-2xl p-6 shadow-lg relative overflow-hidden">
-              <div className="relative z-10 max-w-lg">
-                <span className="bg-emerald-500/40 text-emerald-100 text-xs font-semibold px-2.5 py-1 rounded-md uppercase tracking-wide">
-                  ระบบ AI อัจฉริยะ
-                </span>
-                <h2 className="text-2xl font-bold mt-2">ถ่ายรูปวัตถุดิบ ให้ AI แนะนำเมนูเด็ด!</h2>
-                <p className="text-emerald-100 text-sm mt-1">
-                  ไม่รู้จะทำอะไรทาน? ถ่ายรูปวัตถุดิบในตู้เย็น แล้วเราจะคำนวณสูตรอาหารพร้อมวิธีทำให้อย่างมืออาชีพ
-                </p>
-              </div>
-              <Sparkles className="absolute right-4 bottom-2 h-32 w-32 text-emerald-500/20 pointer-events-none" />
-            </div>
+    function addToCart(productId) {
+      const product = products.find(p => p.id === productId);
+      if (product) {
+        cart.push(product);
+        updateCartUI();
+        addPoints(5);
+      }
+    }
 
-            {/* Upload Area */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 text-center">
-              <div className="max-w-md mx-auto">
-                {selectedImage ? (
-                  <div className="relative rounded-xl overflow-hidden mb-4 border-2 border-emerald-500 shadow-md">
-                    <img src={selectedImage} alt="Uploaded ingredient" className="w-full h-64 object-cover" />
-                    <button 
-                      onClick={() => { setSelectedImage(null); setBase64Image(null); setGeneratedRecipe(null); }}
-                      className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 shadow hover:bg-red-700 transition"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : (
-                  <label className="border-2 border-dashed border-emerald-300 bg-emerald-50/50 hover:bg-emerald-50 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer transition group mb-4">
-                    <div className="bg-emerald-100 text-emerald-600 p-4 rounded-full mb-3 group-hover:scale-110 transition">
-                      <Camera className="h-8 w-8" />
-                    </div>
-                    <span className="font-semibold text-slate-700 text-sm">กดเพื่อถ่ายรูป หรือ เลือกรูปวัตถุดิบ</span>
-                    <span className="text-xs text-slate-400 mt-1">รองรับ JPG, PNG</span>
-                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                  </label>
-                )}
+    function updateCartUI() {
+      const badge = document.getElementById('cart-badge');
+      if (cart.length > 0) {
+        badge.innerText = cart.length;
+        badge.classList.remove('hidden');
 
-                <button
-                  onClick={analyzeIngredients}
-                  disabled={!base64Image || analyzing}
-                  className={`w-full py-3 px-6 rounded-xl font-bold text-white shadow-md flex items-center justify-center space-x-2 transition ${
-                    !base64Image || analyzing 
-                      ? 'bg-slate-300 cursor-not-allowed' 
-                      : 'bg-emerald-600 hover:bg-emerald-700 active:scale-95'
-                  }`}
-                >
-                  {analyzing ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>กำลังวิเคราะห์วัตถุดิบ...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-5 w-5" />
-                      <span>วิเคราะห์และแนะนำเมนู</span>
-                    </>
-                  )}
-                </button>
-                {apiError && <p className="text-red-500 text-xs mt-2">{apiError}</p>}
-              </div>
-            </div>
+        const total = cart.reduce((sum, item) => sum + item.price, 0);
+        document.getElementById('cart-summary').innerText = `สินค้าในตะกร้า (${cart.length} ชิ้น) : รวม ฿${total}`;
+        document.getElementById('cart-banner').classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+        document.getElementById('cart-banner').classList.add('hidden');
+      }
+    }
 
-            {/* Generated Recipe Result */}
-            {generatedRecipe && (
-              <div className="bg-white rounded-2xl p-6 shadow-md border border-emerald-100 animate-fade-in">
-                <div className="flex items-center space-x-2 text-emerald-600 font-semibold text-sm mb-2">
-                  <CheckCircle className="h-5 w-5" />
-                  <span>พบเมนูแนะนำสำหรับคุณ! (+15 แต้ม)</span>
-                </div>
-
-                <div className="border-b border-slate-100 pb-4 mb-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-2xl font-bold text-slate-800">{generatedRecipe.recipeName}</h3>
-                      <p className="text-sm text-slate-500 mt-1">{generatedRecipe.description}</p>
-                    </div>
-                    <span className="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-1 rounded-full">
-                      {generatedRecipe.difficulty}
-                    </span>
-                  </div>
-
-                  {/* Detected items pills */}
-                  <div className="mt-3 flex flex-wrap gap-1.5 items-center">
-                    <span className="text-xs text-slate-400 mr-1">ตรวจพบวัตถุดิบ:</span>
-                    {generatedRecipe.detectedIngredients?.map((item, idx) => (
-                      <span key={idx} className="bg-emerald-50 text-emerald-700 text-xs px-2 py-0.5 rounded-md border border-emerald-200">
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Recipe Grid */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  {/* Ingredients */}
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <h4 className="font-bold text-slate-800 flex items-center space-x-2 mb-3">
-                      <Utensils className="h-4 w-4 text-emerald-600" />
-                      <span>ส่วนผสมที่ต้องใช้</span>
-                    </h4>
-                    <ul className="space-y-2 text-sm text-slate-600">
-                      {generatedRecipe.ingredientsList?.map((ing, idx) => (
-                        <li key={idx} className="flex items-center space-x-2">
-                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                          <span>{ing}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Instructions */}
-                  <div>
-                    <h4 className="font-bold text-slate-800 flex items-center space-x-2 mb-3">
-                      <BookOpen className="h-4 w-4 text-emerald-600" />
-                      <span>ขั้นตอนการทำ</span>
-                    </h4>
-                    <ol className="space-y-3 text-sm text-slate-600">
-                      {generatedRecipe.steps?.map((step, idx) => (
-                        <li key={idx} className="flex space-x-3">
-                          <span className="flex-shrink-0 bg-emerald-100 text-emerald-800 font-bold rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                            {idx + 1}
-                          </span>
-                          <span>{step}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                </div>
-
-                {/* Chef Tip */}
-                {generatedRecipe.chefTip && (
-                  <div className="mt-6 bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl">
-                    <p className="text-xs font-bold text-amber-800 uppercase">💡 เคล็ดลับจากเชฟ</p>
-                    <p className="text-sm text-amber-900 mt-1">{generatedRecipe.chefTip}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 2: RECIPES FEED & COMMENTS */}
-        {activeTab === 'recipes' && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-xl font-bold text-slate-800">สูตรอาหารจากชุมชนเชฟ</h2>
-                <p className="text-xs text-slate-500">แบ่งปันสูตรเด็ด ร่วมรีวิว และแลกเปลี่ยนไอเดีย</p>
-              </div>
-            </div>
-
-            {/* Recipes List */}
-            <div className="space-y-6">
-              {recipes.map((rec) => (
-                <div key={rec.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                  <div className="md:flex">
-                    <div className="md:w-1/3 h-52 md:h-auto relative">
-                      <img src={rec.image} alt={rec.title} className="w-full h-full object-cover" />
-                      <span className="absolute top-2 left-2 bg-slate-900/70 text-white text-xs px-2.5 py-1 rounded-full backdrop-blur-sm">
-                        ⏱️ {rec.time}
-                      </span>
-                    </div>
-                    <div className="p-5 md:w-2/3 flex flex-col justify-between">
-                      <div>
-                        <div className="flex justify-between items-start">
-                          <h3 className="font-bold text-lg text-slate-800">{rec.title}</h3>
-                          <span className="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-medium">
-                            {rec.difficulty}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-400 mt-0.5 mb-3">โดย {rec.author}</p>
-
-                        <div className="mb-3">
-                          <p className="text-xs font-semibold text-slate-500 mb-1">ส่วนผสมหลัก:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {rec.ingredients.map((ing, i) => (
-                              <span key={i} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                                {ing}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Comments Expansion */}
-                      <div className="border-t border-slate-100 pt-3 mt-3">
-                        <h4 className="text-xs font-bold text-slate-700 flex items-center space-x-1 mb-2">
-                          <MessageSquare className="h-3.5 w-3.5 text-emerald-600" />
-                          <span>ความคิดเห็น ({rec.comments.length})</span>
-                        </h4>
-
-                        <div className="space-y-2 max-h-36 overflow-y-auto mb-3">
-                          {rec.comments.map(c => (
-                            <div key={c.id} className="bg-slate-50 p-2.5 rounded-lg text-xs">
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="font-bold text-slate-700">{c.user} <span className="text-slate-400 text-[10px]">({c.role})</span></span>
-                                <div className="flex text-amber-400">
-                                  {[...Array(c.rating)].map((_, r) => (
-                                    <Star key={r} className="h-3 w-3 fill-amber-400" />
-                                  ))}
-                                </div>
-                              </div>
-                              <p className="text-slate-600">{c.text}</p>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Add Comment Input */}
-                        <div className="flex space-x-2">
-                          <input
-                            type="text"
-                            placeholder="เขียนรีวิว หรือความคิดเห็น... (+10 แต้ม)"
-                            value={newComment[rec.id] || ''}
-                            onChange={(e) => setNewComment({ ...newComment, [rec.id]: e.target.value })}
-                            className="flex-1 bg-slate-100 text-xs rounded-xl px-3 py-2 border border-slate-200 focus:outline-none focus:border-emerald-500"
-                          />
-                          <button
-                            onClick={() => handleAddComment(rec.id)}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-2 rounded-xl font-semibold transition"
-                          >
-                            ส่ง
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 3: MARKETPLACE */}
-        {activeTab === 'market' && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-xl font-bold text-slate-800">ตลาดสดและวัตถุดิบออนไลน์</h2>
-                <p className="text-xs text-slate-500">ซื้อ-ขายวัตถุดิบคุณภาพดี ส่งตรงจากเกษตรกรและผู้ผลิต</p>
-              </div>
-            </div>
-
-            {/* Cart Summary Header */}
-            {cart.length > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <ShoppingBag className="h-5 w-5 text-amber-600" />
-                  <span className="text-xs font-semibold text-amber-900">
-                    สินค้าในตะกร้า ({cart.length} ชิ้น) : รวม ฿{cart.reduce((sum, item) => sum + item.price, 0)}
-                  </span>
-                </div>
-                <button className="bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-1.5 rounded-lg font-bold transition">
-                  สั่งซื้อสินค้า
-                </button>
-              </div>
-            )}
-
-            {/* Products Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {products.map((p) => (
-                <div key={p.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col justify-between hover:shadow-md transition">
-                  <div>
-                    <div className="h-36 relative">
-                      <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
-                      <span className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                        {p.category}
-                      </span>
-                    </div>
-                    <div className="p-3">
-                      <h3 className="font-bold text-xs text-slate-800 line-clamp-2">{p.name}</h3>
-                      <p className="text-[10px] text-slate-400 mt-1">ร้าน: {p.seller}</p>
-                      
-                      <div className="flex items-center space-x-1 mt-1 text-amber-500 text-xs">
-                        <Star className="h-3 w-3 fill-amber-400" />
-                        <span className="font-semibold text-slate-600">{p.rating}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-3 pt-0 flex justify-between items-center border-t border-slate-50">
-                    <span className="font-extrabold text-emerald-700 text-sm">฿{p.price}</span>
-                    <button
-                      onClick={() => addToCart(p)}
-                      className="bg-emerald-100 hover:bg-emerald-600 text-emerald-700 hover:text-white p-2 rounded-xl transition"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: PROFILE & LEVEL PROGRESS */}
-        {activeTab === 'profile' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="bg-gradient-to-tr from-amber-400 to-amber-200 text-slate-900 font-extrabold p-4 rounded-2xl text-2xl shadow">
-                  <ChefHat className="h-8 w-8" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-slate-800">คุณ (ผู้ใช้งานเดโม)</h2>
-                  <p className="text-xs text-emerald-600 font-semibold">{userRole}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">สะสมคะแนนจากการมีส่วนร่วมในแอป</p>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
-                <div className="flex justify-between items-center text-xs font-bold text-slate-700 mb-2">
-                  <span>คะแนนสะสมของคุณ: {userScore} แต้ม</span>
-                  <span>เป้าหมายถัดไป: {userScore < 100 ? '100 pts (เชฟคลาสสิก)' : '300 pts (มาสเตอร์เชฟ)'}</span>
-                </div>
-                <div className="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
-                  <div 
-                    className="bg-gradient-to-r from-emerald-500 to-amber-400 h-full transition-all duration-500"
-                    style={{ width: `${Math.min(100, (userScore / 300) * 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Levels Info */}
-              <h3 className="font-bold text-slate-800 text-sm mb-3">ระดับเชฟทั้งหมด</h3>
-              <div className="space-y-3">
-                <div className={`p-3 rounded-xl border flex items-center justify-between ${userScore < 100 ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200 opacity-60'}`}>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-xl">🍳</span>
-                    <div>
-                      <p className="font-bold text-xs text-slate-800">เชฟฝึกหัด (Apprentice Chef)</p>
-                      <p className="text-[10px] text-slate-500">0 - 99 คะแนน | เริ่มต้นเส้นทางการทำอาหาร</p>
-                    </div>
-                  </div>
-                  {userScore < 100 && <span className="text-xs bg-amber-500 text-white px-2 py-0.5 rounded font-bold">ปัจจุบัน</span>}
-                </div>
-
-                <div className={`p-3 rounded-xl border flex items-center justify-between ${userScore >= 100 && userScore < 300 ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200'}`}>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-xl">👨‍🍳</span>
-                    <div>
-                      <p className="font-bold text-xs text-slate-800">เชฟคลาสสิก (Classic Chef)</p>
-                      <p className="text-[10px] text-slate-500">100 - 299 คะแนน | เชี่ยวชาญเมนูหลากหลาย</p>
-                    </div>
-                  </div>
-                  {userScore >= 100 && userScore < 300 && <span className="text-xs bg-amber-500 text-white px-2 py-0.5 rounded font-bold">ปัจจุบัน</span>}
-                </div>
-
-                <div className={`p-3 rounded-xl border flex items-center justify-between ${userScore >= 300 ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200'}`}>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-xl">👑</span>
-                    <div>
-                      <p className="font-bold text-xs text-slate-800">มาสเตอร์เชฟ (Master Chef)</p>
-                      <p className="text-[10px] text-slate-500">300+ คะแนน | ผู้เชี่ยวชาญระดับอาจารย์</p>
-                    </div>
-                  </div>
-                  {userScore >= 300 && <span className="text-xs bg-amber-500 text-white px-2 py-0.5 rounded font-bold">ปัจจุบัน</span>}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-      </main>
-
-      {/* BOTTOM NAVIGATION BAR */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 py-2 px-6 shadow-lg z-50">
-        <div className="max-w-md mx-auto flex justify-between items-center">
-          <button
-            onClick={() => setActiveTab('scan')}
-            className={`flex flex-col items-center space-y-1 ${activeTab === 'scan' ? 'text-emerald-600 font-bold' : 'text-slate-400'}`}
-          >
-            <Camera className="h-5 w-5" />
-            <span className="text-[10px]">AI สแกน</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('recipes')}
-            className={`flex flex-col items-center space-y-1 ${activeTab === 'recipes' ? 'text-emerald-600 font-bold' : 'text-slate-400'}`}
-          >
-            <BookOpen className="h-5 w-5" />
-            <span className="text-[10px]">สูตรอาหาร</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('market')}
-            className={`flex flex-col items-center space-y-1 ${activeTab === 'market' ? 'text-emerald-600 font-bold' : 'text-slate-400'}`}
-          >
-            <ShoppingBag className="h-5 w-5" />
-            <span className="text-[10px]">ตลาดสด</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('profile')}
-            className={`flex flex-col items-center space-y-1 ${activeTab === 'profile' ? 'text-emerald-600 font-bold' : 'text-slate-400'}`}
-          >
-            <Award className="h-5 w-5" />
-            <span className="text-[10px]">ระดับเชฟ</span>
-          </button>
-        </div>
-      </nav>
-
-    </div>
-  );
-}
+    function checkout() {
+      alert(`สั่งซื้อสำเร็จ! รวมทั้งสิ้น ฿${cart.reduce((sum, item) => sum + item.price, 0)} (สะสมคะแนนเรียบร้อยแล้ว)`);
+      cart = [];
+      updateCartUI();
+    }
+  </script>
+</body>
+</html>
