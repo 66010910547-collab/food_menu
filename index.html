@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Camera, 
   ShoppingBag, 
@@ -8,16 +8,10 @@ import {
   Star, 
   Plus, 
   ShoppingCart, 
-  Upload, 
   CheckCircle, 
   Sparkles, 
-  User, 
-  ChevronRight,
-  ChefHat,
-  Search,
-  BookOpen,
-  TrendingUp,
-  Tag
+  ChefHat, 
+  BookOpen
 } from 'lucide-react';
 
 export default function App() {
@@ -118,7 +112,7 @@ export default function App() {
   ]);
 
   const [newComment, setNewComment] = useState({});
-  const [commentRating, setCommentRating] = useState({});
+  const [commentRating] = useState({});
 
   // Calculate level based on score
   useEffect(() => {
@@ -145,6 +139,11 @@ export default function App() {
     }
   };
 
+  // Add Score Points Function
+  const addPoints = (pts) => {
+    setUserScore(prev => prev + pts);
+  };
+
   // Call Gemini API to analyze ingredients & suggest recipes
   const analyzeIngredients = async () => {
     if (!base64Image) return;
@@ -153,7 +152,7 @@ export default function App() {
     setApiError(null);
     setGeneratedRecipe(null);
 
-    const apiKey = ""; // Auth key handled at runtime
+    const apiKey = ""; // Runtime handled key
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
     const promptText = `
@@ -200,8 +199,7 @@ export default function App() {
         if (textResult) {
           const parsed = JSON.parse(textResult);
           setGeneratedRecipe(parsed);
-          // Reward points for using AI analysis
-          addPoints(15, 'วิเคราะห์วัตถุดิบด้วย AI');
+          addPoints(15);
           break;
         }
       } catch (err) {
@@ -220,15 +218,10 @@ export default function App() {
     }
   };
 
-  // Add Score Points Function
-  const addPoints = (pts, reason) => {
-    setUserScore(prev => prev + pts);
-  };
-
   // Handle Add to Cart
   const addToCart = (product) => {
     setCart(prev => [...prev, product]);
-    addPoints(5, 'เพิ่มสินค้าลงตะกร้า');
+    addPoints(5);
   };
 
   // Add Comment to Recipe
@@ -251,7 +244,7 @@ export default function App() {
     }));
 
     setNewComment(prev => ({ ...prev, [recipeId]: '' }));
-    addPoints(10, 'เขียนคอมเมนต์สูตรอาหาร');
+    addPoints(10);
   };
 
   return (
